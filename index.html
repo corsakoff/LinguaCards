@@ -1,1493 +1,292 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LinguaCards</title>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --accent:#6c63ff;--accent-hover:#574fd6;--success:#34d399;
-  --danger:#f87171;--warning:#fbbf24;--radius:20px;--radius-sm:12px;
-  --blur:blur(24px);--transition:0.3s cubic-bezier(.4,0,.2,1);
-}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;min-height:100vh;transition:background var(--transition),color var(--transition);overflow-x:hidden;}
-body.dark{background:linear-gradient(135deg,#1c1c2e 0%,#2a2a3e 100%);color:#f0f0f5;--glass-bg:rgba(255,255,255,0.06);--glass-border:rgba(255,255,255,0.12);--text-muted:rgba(240,240,245,0.5);--shadow:0 8px 32px rgba(0,0,0,0.4);--input-bg:rgba(255,255,255,0.07);}
-body.light{background:linear-gradient(135deg,#e8e8f4 0%,#f0eef8 100%);color:#1a1a2e;--glass-bg:rgba(255,255,255,0.45);--glass-border:rgba(255,255,255,0.7);--text-muted:rgba(26,26,46,0.5);--shadow:0 8px 32px rgba(100,100,160,0.12);--input-bg:rgba(255,255,255,0.6);}
-.glass{background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-border);box-shadow:var(--shadow);border-radius:var(--radius);}
-.glass-sm{background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-border);box-shadow:var(--shadow);border-radius:var(--radius-sm);}
-#app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;position:sticky;top:0;z-index:100;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-bottom:1px solid var(--glass-border);}
-.logo{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;}
-.logo-text{color:inherit;}
-.logo-text span{color:var(--accent);}
-.header-actions{display:flex;gap:8px;align-items:center;}
-.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all var(--transition);color:inherit;}
-.icon-btn:hover{transform:scale(1.1);background:var(--accent);color:#fff;border-color:var(--accent);}
-nav{display:flex;gap:8px;padding:14px 24px;justify-content:center;}
-.nav-btn{padding:8px 20px;border-radius:999px;border:1px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);cursor:pointer;font-size:0.88rem;font-weight:600;color:inherit;transition:all var(--transition);white-space:nowrap;}
-.nav-btn:hover{background:rgba(108,99,255,0.15);border-color:var(--accent);}
-.nav-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-main{flex:1;padding:0 24px 48px;max-width:980px;margin:0 auto;width:100%;}
-.page{display:none;animation:fadeIn 0.35s ease;}
-.page.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-h2{font-size:1.55rem;font-weight:800;margin-bottom:6px;}
-h3{font-size:1.05rem;font-weight:700;margin-bottom:10px;}
-p{color:var(--text-muted);line-height:1.6;}
-.btn{padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:0.88rem;font-weight:700;transition:all var(--transition);display:inline-flex;align-items:center;gap:6px;font-family:inherit;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 16px rgba(108,99,255,0.35);}
-.btn-success{background:var(--success);color:#fff;}
-.btn-success:hover{filter:brightness(1.1);transform:translateY(-1px);}
-.btn-danger{background:var(--danger);color:#fff;}
-.btn-danger:hover{filter:brightness(1.1);transform:translateY(-1px);}
-.btn-ghost{background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-border);color:inherit;}
-.btn-ghost:hover{background:rgba(108,99,255,0.12);border-color:var(--accent);}
-.btn-sm{padding:6px 14px;font-size:0.8rem;}
-input,textarea,select{width:100%;padding:11px 15px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);background:var(--input-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);color:inherit;font-size:0.92rem;font-family:inherit;transition:all var(--transition);outline:none;}
-input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.18);}
-input::placeholder,textarea::placeholder{color:var(--text-muted);}
-textarea{resize:vertical;}
-label{display:block;margin-bottom:5px;font-size:0.78rem;font-weight:700;color:var(--text-muted);letter-spacing:0.6px;text-transform:uppercase;}
-.form-group{margin-bottom:16px;}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;}
-.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:0.72rem;font-weight:700;}
-.badge-success{background:rgba(52,211,153,0.18);color:var(--success);}
-.word-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
-.word-chip{padding:3px 9px;border-radius:999px;font-size:0.75rem;font-weight:500;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);}
-.groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
-.group-card{padding:20px;transition:all var(--transition);}
-.group-card:hover{transform:translateY(-3px);}
-.group-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
-.group-title{font-size:1rem;font-weight:800;}
-.group-meta{font-size:0.78rem;color:var(--text-muted);margin-top:3px;}
-.group-actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
-.empty-state{text-align:center;padding:50px 20px;}
-.empty-state .es-icon{font-size:3rem;margin-bottom:14px;}
-.empty-state h3{font-size:1.15rem;margin-bottom:6px;}
-.empty-state p{margin-bottom:18px;}
-.modal-overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity var(--transition);padding:20px;}
-.modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{padding:26px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;transform:scale(0.95);transition:transform var(--transition);}
-.modal-overlay.open .modal{transform:scale(1);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.modal-header h3{font-size:1.15rem;margin:0;font-weight:800;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
-.tab-switcher{display:flex;gap:6px;margin-bottom:18px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:4px;}
-.tab-btn{flex:1;padding:8px;border-radius:9px;border:none;background:transparent;cursor:pointer;font-size:0.85rem;font-weight:700;color:var(--text-muted);transition:all var(--transition);font-family:inherit;}
-.tab-btn.active{background:var(--accent);color:#fff;}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
-
-/* WORD ROW — только плейсхолдеры, никаких заголовков */
-.word-row{display:flex;gap:6px;margin-bottom:8px;align-items:center;}
-.word-row-inputs{display:grid;grid-template-columns:1fr 24px 1fr;gap:6px;flex:1;align-items:center;}
-.word-input-w,.word-input-t{min-width:0;}
-.lang-sep{display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem;}
-.translate-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass-bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:all var(--transition);color:inherit;flex-shrink:0;}
-.translate-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
-.translate-btn:disabled{opacity:0.5;cursor:not-allowed;}
-.remove-word-btn{width:28px;height:28px;border-radius:50%;border:1px solid transparent;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.8rem;transition:all var(--transition);color:var(--text-muted);flex-shrink:0;}
-.remove-word-btn:hover{background:var(--danger);color:#fff;border-color:var(--danger);}
-.words-editor{max-height:280px;overflow-y:auto;padding-right:2px;margin-bottom:8px;}
-.add-word-row{margin-top:4px;}
-
-/* BULK */
-.bulk-textarea{min-height:160px;font-family:monospace;font-size:0.85rem;line-height:1.6;}
-.bulk-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
-.bulk-hint{font-size:0.76rem;color:var(--text-muted);margin-top:8px;line-height:1.5;}
-.bulk-hint code{background:rgba(108,99,255,0.12);padding:1px 5px;border-radius:4px;font-size:0.78rem;}
-.bulk-preview{margin-top:12px;}
-.bulk-preview-title{font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
-.bulk-preview-list{max-height:150px;overflow-y:auto;}
-.bulk-preview-item{display:flex;gap:8px;padding:5px 8px;border-radius:8px;font-size:0.82rem;margin-bottom:3px;align-items:center;}
-.bulk-preview-item.has-translate{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);}
-.bulk-preview-item.no-translate{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.15);}
-.bulk-preview-item.translating{background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.15);}
-.bpi-word{font-weight:700;flex:1;}
-.bpi-arrow{color:var(--text-muted);flex-shrink:0;}
-.bpi-translate{flex:1;color:var(--text-muted);}
-.bpi-translate.done{color:var(--success);font-weight:600;}
-.bpi-translate.pending{color:var(--warning);}
-.bpi-translate.loading{color:var(--accent);}
-.translate-all-progress{height:4px;background:var(--glass-bg);border-radius:999px;overflow:hidden;border:1px solid var(--glass-border);margin-top:8px;display:none;}
-.translate-all-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--success));border-radius:999px;transition:width 0.3s ease;width:0%;}
-
-/* STUDY MODAL */
-.study-modal{max-width:500px;}
-.mode-list{display:flex;flex-direction:column;gap:10px;margin:10px 0 18px;}
-.mode-card{padding:14px 16px;cursor:pointer;border-radius:var(--radius-sm);border:2px solid var(--glass-border);transition:all var(--transition);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);display:flex;align-items:center;gap:12px;}
-.mode-card:hover{border-color:var(--accent);background:rgba(108,99,255,0.08);}
-.mode-card.selected{border-color:var(--accent);background:rgba(108,99,255,0.15);}
-.mode-icon{font-size:1.4rem;flex-shrink:0;}
-.mode-title{font-size:0.88rem;font-weight:700;}
-.mode-desc{font-size:0.75rem;color:var(--text-muted);margin-top:2px;}
-.order-tabs{display:flex;gap:8px;}
-.order-tab{flex:1;}
-.order-tab input[type=radio]{display:none;}
-.order-tab label{display:block;text-align:center;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);transition:all var(--transition);color:inherit;text-transform:none;letter-spacing:0;}
-.order-tab input:checked+label{background:var(--accent);color:#fff;border-color:var(--accent);}
-
-/* STUDY FULLSCREEN */
-.study-fullscreen{position:fixed;inset:0;z-index:150;display:none;flex-direction:column;overflow-y:auto;}
-body.dark .study-fullscreen{background:linear-gradient(135deg,#1c1c2e 0%,#2a2a3e 100%);}
-body.light .study-fullscreen{background:linear-gradient(135deg,#e8e8f4 0%,#f0eef8 100%);}
-.study-fullscreen.open{display:flex;}
-.study-fs-header{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);flex-shrink:0;}
-.study-fs-body{flex:1;padding:24px;max-width:700px;margin:0 auto;width:100%;}
-.progress-bar-wrap{flex:1;height:7px;background:var(--glass-bg);border-radius:999px;overflow:hidden;border:1px solid var(--glass-border);}
-.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--success));border-radius:999px;transition:width 0.4s ease;}
-.progress-text{font-size:0.82rem;font-weight:700;color:var(--text-muted);white-space:nowrap;}
-.flashcard-scene{perspective:1200px;width:100%;max-width:560px;margin:0 auto 20px;min-height:220px;}
-.flashcard{width:100%;min-height:220px;position:relative;transform-style:preserve-3d;transition:transform 0.65s cubic-bezier(.4,0,.2,1);}
-.flashcard.clickable{cursor:pointer;}
-.flashcard.flipped{transform:rotateY(180deg);}
-.card-face{position:absolute;width:100%;min-height:220px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;border-radius:var(--radius);text-align:center;border:1px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--shadow);}
-.card-back{transform:rotateY(180deg);}
-.card-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
-.card-word{font-size:2rem;font-weight:900;letter-spacing:-0.5px;line-height:1.2;}
-.card-tap-hint{font-size:0.75rem;color:var(--text-muted);margin-top:14px;}
-.answer-area{max-width:560px;margin:0 auto;}
-.answer-row{display:flex;gap:8px;margin-bottom:10px;}
-.answer-row input{flex:1;}
-#answerFeedback{text-align:center;padding:10px;border-radius:var(--radius-sm);font-weight:700;font-size:0.9rem;display:none;}
-#answerFeedback.correct{background:rgba(52,211,153,0.12);color:var(--success);display:block;}
-#answerFeedback.wrong{background:rgba(248,113,113,0.12);color:var(--danger);display:block;}
-.hint-strip{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;min-height:20px;}
-.hint-letter{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:800;border:2px solid var(--glass-border);background:var(--glass-bg);}
-.hint-letter.revealed{border-color:var(--accent);color:var(--accent);}
-.hint-letter.space-letter{border-color:transparent;background:transparent;width:14px;}
-.answer-hint-row{display:flex;gap:8px;margin-top:8px;}
-.fc-controls{display:flex;gap:10px;justify-content:center;margin-top:14px;}
-.test-question{padding:22px 24px;margin-bottom:14px;border-radius:var(--radius);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-border);}
-.test-q-word{font-size:1.4rem;font-weight:800;margin-bottom:16px;text-align:center;}
-.test-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.test-option{padding:13px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);cursor:pointer;font-size:0.9rem;font-weight:600;transition:all var(--transition);text-align:center;color:inherit;font-family:inherit;}
-.test-option:hover:not([disabled]){border-color:var(--accent);background:rgba(108,99,255,0.12);}
-.test-option.correct-ans{border-color:var(--success)!important;background:rgba(52,211,153,0.15)!important;color:var(--success);}
-.test-option.wrong-ans{border-color:var(--danger)!important;background:rgba(248,113,113,0.15)!important;color:var(--danger);}
-.results-wrap{display:flex;align-items:center;justify-content:center;padding:20px;}
-.results-card{padding:36px;text-align:center;max-width:460px;width:100%;}
-.results-score{font-size:3.5rem;font-weight:900;color:var(--accent);margin:14px 0 4px;}
-.results-pct{font-size:1.2rem;color:var(--text-muted);margin-bottom:16px;}
-.results-row{display:flex;gap:20px;justify-content:center;margin:14px 0;}
-.result-item{text-align:center;}
-.result-item .rn{font-size:1.5rem;font-weight:900;display:block;}
-.result-item .rl{font-size:0.75rem;color:var(--text-muted);}
-.results-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
-.wrong-list{text-align:left;margin-top:12px;font-size:0.82rem;}
-.wrong-item{padding:5px 0;border-bottom:1px solid var(--glass-border);color:var(--text-muted);}
-.stats-top{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
-.stat-card{padding:20px;text-align:center;}
-.stat-num{font-size:2rem;font-weight:900;color:var(--accent);display:block;}
-.stat-label{font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-top:4px;}
-.stat-bar-wrap{margin-bottom:14px;}
-.stat-bar-label{display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:5px;font-weight:600;}
-.stat-bar-track{height:10px;background:var(--glass-bg);border-radius:999px;overflow:hidden;border:1px solid var(--glass-border);}
-.stat-bar-fill{height:100%;border-radius:999px;transition:width 0.6s ease;}
-.settings-modal{max-width:540px;}
-.settings-block{margin-bottom:20px;}
-.settings-block h3{padding-bottom:10px;border-bottom:1px solid var(--glass-border);margin-bottom:4px;font-size:0.95rem;}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--glass-border);gap:14px;}
-.settings-row:last-child{border-bottom:none;}
-.sr-info{flex:1;}
-.sr-title{font-weight:700;font-size:0.9rem;}
-.sr-desc{font-size:0.76rem;color:var(--text-muted);margin-top:2px;}
-.toggle{position:relative;width:48px;height:26px;cursor:pointer;flex-shrink:0;}
-.toggle input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-track{position:absolute;inset:0;border-radius:999px;background:rgba(108,99,255,0.15);border:1px solid var(--glass-border);transition:all var(--transition);}
-.toggle input:checked+.toggle-track{background:var(--accent);border-color:var(--accent);}
-.toggle-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.2);transition:transform var(--transition);pointer-events:none;}
-.toggle input:checked~.toggle-thumb{transform:translateX(22px);}
-.lang-site-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
-.lang-site-opt{padding:7px 16px;border-radius:999px;border:1.5px solid var(--glass-border);background:var(--glass-bg);cursor:pointer;font-size:0.84rem;font-weight:700;transition:all var(--transition);color:inherit;}
-.lang-site-opt:hover{border-color:var(--accent);}
-.lang-site-opt.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.share-code-box{font-family:monospace;font-size:0.78rem;padding:12px;word-break:break-all;border-radius:var(--radius-sm);background:rgba(0,0,0,0.08);border:1px solid var(--glass-border);max-height:120px;overflow-y:auto;}
-body.dark .share-code-box{background:rgba(255,255,255,0.04);}
-#toastWrap{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:7px;}
-.toast{padding:11px 16px;border-radius:var(--radius-sm);font-size:0.87rem;font-weight:600;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-border);box-shadow:var(--shadow);animation:toastIn 0.3s ease;display:flex;align-items:center;gap:8px;max-width:300px;}
-.toast.success{border-color:var(--success);}
-.toast.error{border-color:var(--danger);}
-.toast.info{border-color:var(--accent);}
-@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
-::-webkit-scrollbar{width:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(108,99,255,0.25);border-radius:999px;}
-@media(max-width:600px){
-  header{padding:11px 14px;}main{padding:0 14px 48px;}nav{padding:10px 14px;gap:6px;}
-  .nav-btn{padding:7px 14px;font-size:0.82rem;}.stats-top{gap:8px;}.stat-card{padding:14px 8px;}
-  .stat-num{font-size:1.5rem;}.groups-grid{grid-template-columns:1fr;}h2{font-size:1.25rem;}
-  .card-word{font-size:1.5rem;}.test-options{grid-template-columns:1fr;}
-  .two-col{grid-template-columns:1fr;}.study-fs-body{padding:16px;}
-  .word-row-inputs{grid-template-columns:1fr 20px 1fr;}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LinguaCards — карточки, диктанты и интервальное повторение иностранных слов">
+  <meta name="theme-color" content="#1c1c2e">
+  <title>LinguaCards</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="core.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body class="dark">
-<div id="app">
-<header>
-  <div class="logo">🌍 <div class="logo-text">Lingua<span>Cards</span></div></div>
-  <div class="header-actions">
-    <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
-    <button class="icon-btn" onclick="openSettings()">⚙️</button>
+  <a class="skip-link" href="#mainContent">К содержимому</a>
+  <div id="app">
+    <header>
+      <div class="logo" aria-label="LinguaCards">🌍 <div class="logo-text">Lingua<span>Cards</span></div></div>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="themeBtn" aria-label="Переключить тему" title="Переключить тему">🌙</button>
+        <button type="button" class="icon-btn" id="settingsBtn" aria-label="Настройки" title="Настройки">⚙️</button>
+      </div>
+    </header>
+    <nav aria-label="Основная навигация">
+      <button type="button" class="nav-btn active" data-page="groups" aria-current="page" id="navGroups">📚 Группы</button>
+      <button type="button" class="nav-btn" data-page="stats" id="navStats">📊 Статистика</button>
+    </nav>
+    <main id="mainContent">
+      <div id="page-groups" class="page active">
+        <div class="section-header">
+          <div class="section-heading">
+            <h1 id="groupsTitle">Мои группы</h1>
+            <p id="groupsSubtitle">Управляйте наборами слов</p>
+          </div>
+          <div class="section-actions">
+            <button type="button" class="btn btn-ghost btn-sm" id="importBtn">📥 <span id="importBtnText">Импорт</span></button>
+            <button type="button" class="btn btn-primary" id="createGroupBtn">➕ <span id="createGroupBtnText">Создать</span></button>
+          </div>
+        </div>
+        <div id="groupsGrid" class="groups-grid"></div>
+      </div>
+      <div id="page-stats" class="page">
+        <h1 id="statsTitle">📊 Статистика</h1>
+        <p id="statsSubtitle" class="stats-subtitle">Ваш прогресс в изучении слов</p>
+        <div class="stats-top">
+          <div class="glass-sm stat-card"><span class="stat-num" id="stSessions">0</span><div class="stat-label" id="stSessionsLabel">Сессий</div></div>
+          <div class="glass-sm stat-card"><span class="stat-num" id="stCorrect">0</span><div class="stat-label" id="stCorrectLabel">Правильных</div></div>
+          <div class="glass-sm stat-card"><span class="stat-num" id="stAlmost">0</span><div class="stat-label" id="stAlmostLabel">Почти верно</div></div>
+          <div class="glass-sm stat-card"><span class="stat-num" id="stAcc">0%</span><div class="stat-label" id="stAccLabel">Точность</div></div>
+          <div class="glass-sm stat-card"><span class="stat-num" id="stDue">0</span><div class="stat-label" id="stDueLabel">К повторению</div></div>
+        </div>
+        <section class="glass stats-section" aria-labelledby="groupStatsTitle">
+          <h2 id="groupStatsTitle">По группам</h2>
+          <div id="groupStatsWrap"></div>
+        </section>
+        <section class="glass stats-section" aria-labelledby="recentStatsTitle">
+          <h2 id="recentStatsTitle">Последние сессии</h2>
+          <div id="recentSessionsWrap"></div>
+        </section>
+      </div>
+    </main>
   </div>
-</header>
-<nav>
-  <button class="nav-btn active" data-page="groups" onclick="showPage('groups')">📚 Группы</button>
-  <button class="nav-btn" data-page="stats" onclick="showPage('stats')">📊 Статистика</button>
-</nav>
-<main>
-<div id="page-groups" class="page active">
-  <div class="section-header">
-    <div><h2 id="t-groups-title">Мои группы</h2><p id="t-groups-sub">Управляйте наборами слов</p></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm" onclick="showImportModal()">📥 <span id="t-btn-import">Импорт</span></button>
-      <button class="btn btn-primary" onclick="openCreateModal()">➕ <span id="t-btn-create">Создать</span></button>
-    </div>
-  </div>
-  <div id="groupsGrid" class="groups-grid"></div>
-</div>
-<div id="page-stats" class="page">
-  <h2 id="t-stats-title">📊 Статистика</h2>
-  <p id="t-stats-sub" style="margin-bottom:20px">Ваш прогресс в изучении слов</p>
-  <div class="stats-top">
-    <div class="glass-sm stat-card"><span class="stat-num" id="stSessions">0</span><div class="stat-label" id="t-st-sessions">Сессий</div></div>
-    <div class="glass-sm stat-card"><span class="stat-num" id="stCorrect">0</span><div class="stat-label" id="t-st-correct">Правильных</div></div>
-    <div class="glass-sm stat-card"><span class="stat-num" id="stAcc">0%</span><div class="stat-label" id="t-st-acc">Точность</div></div>
-  </div>
-  <div class="glass" style="padding:22px;margin-bottom:14px"><h3 id="t-st-by-group">По группам</h3><div id="groupStatsWrap"></div></div>
-  <div class="glass" style="padding:22px"><h3 id="t-st-recent">Последние сессии</h3><div id="recentSessionsWrap"></div></div>
-</div>
-</main>
-</div>
 
-<!-- STUDY FULLSCREEN -->
-<div class="study-fullscreen" id="studyFullscreen">
-  <div class="study-fs-header">
-    <button class="btn btn-ghost btn-sm" onclick="exitStudy()">← <span id="t-btn-back">Назад</span></button>
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
-    <span class="progress-text" id="progressText">0/0</span>
-    <span id="studyGroupName" style="font-size:0.8rem;color:var(--text-muted);margin-left:8px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-  </div>
-  <div class="study-fs-body">
-    <div id="writeMode">
-      <div class="flashcard-scene">
-        <div class="flashcard" id="flashcard">
-          <div class="card-face card-front"><div class="card-label" id="cardFrontLabel">Слово</div><div class="card-word" id="cardFrontWord"></div></div>
-          <div class="card-face card-back"><div class="card-label" id="cardBackLabel">Перевод</div><div class="card-word" id="cardBackWord"></div></div>
+  <section class="study-fullscreen" id="studyFullscreen" aria-label="Изучение слов" hidden>
+    <div class="study-fs-header">
+      <button type="button" class="btn btn-ghost btn-sm" id="exitStudyBtn">← <span id="backBtnText">Назад</span></button>
+      <div class="progress-bar-wrap" role="progressbar" aria-label="Прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="studyProgress">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-text" id="progressText">0/0</span>
+      <span id="studyGroupName" class="study-group-name"></span>
+    </div>
+    <div class="study-fs-body">
+      <div id="writeMode">
+        <div class="flashcard-scene">
+          <div class="flashcard" id="flashcard">
+            <div class="card-face card-front">
+              <div class="card-label" id="cardFrontLabel">Слово</div>
+              <div class="card-word" id="cardFrontWord"></div>
+              <div class="card-extra" id="cardFrontExtra"></div>
+            </div>
+            <div class="card-face card-back">
+              <div class="card-label" id="cardBackLabel">Перевод</div>
+              <div class="card-word" id="cardBackWord"></div>
+              <div class="card-extra" id="cardBackExtra"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-strip" id="hintStrip" aria-label="Подсказка"></div>
+        <div class="answer-area">
+          <div class="answer-row">
+            <label class="sr-only" for="answerInput" id="answerInputLabel">Ваш ответ</label>
+            <input type="text" id="answerInput" placeholder="Введите ответ..." autocomplete="off" autocorrect="off" spellcheck="false">
+            <button type="button" class="btn btn-primary check-btn" id="checkAnswerBtn" aria-label="Проверить ответ">✓</button>
+          </div>
+          <div id="answerFeedback" role="status" aria-live="polite"></div>
+          <div class="answer-hint-row">
+            <button type="button" class="btn btn-ghost btn-sm" id="hintBtn">💡 <span id="hintBtnText">Подсказка</span></button>
+            <button type="button" class="btn btn-ghost btn-sm" id="skipBtn">⏭ <span id="skipBtnText">Пропустить</span></button>
+          </div>
         </div>
       </div>
-      <div class="hint-strip" id="hintStrip"></div>
-      <div class="answer-area">
-        <div class="answer-row">
-          <input type="text" id="answerInput" placeholder="Введите ответ..." autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="handleAnswerKey(event)">
-          <button class="btn btn-primary" onclick="checkAnswer()">✓</button>
+      <div id="fcMode" hidden>
+        <div class="flashcard-scene">
+          <div class="flashcard clickable" id="flashcardFC" role="button" tabindex="0" aria-label="Перевернуть карточку">
+            <div class="card-face card-front">
+              <div class="card-label" id="fcFrontLabel">Слово</div>
+              <div class="card-word" id="fcFrontWord"></div>
+              <div class="card-extra" id="fcFrontExtra"></div>
+              <div class="card-tap-hint" id="fcTapHint">Нажмите, чтобы перевернуть</div>
+            </div>
+            <div class="card-face card-back">
+              <div class="card-label" id="fcBackLabel">Перевод</div>
+              <div class="card-word" id="fcBackWord"></div>
+              <div class="card-extra" id="fcBackExtra"></div>
+            </div>
+          </div>
         </div>
-        <div id="answerFeedback"></div>
-        <div class="answer-hint-row">
-          <button class="btn btn-ghost btn-sm" onclick="showHint()">💡 <span id="t-btn-hint">Подсказка</span></button>
-          <button class="btn btn-ghost btn-sm" onclick="skipCard()">⏭ <span id="t-btn-skip">Пропустить</span></button>
-        </div>
-      </div>
-    </div>
-    <div id="fcMode" style="display:none">
-      <div class="flashcard-scene">
-        <div class="flashcard clickable" id="flashcardFC" onclick="flipFC()">
-          <div class="card-face card-front"><div class="card-label" id="fcFrontLabel">Слово</div><div class="card-word" id="fcFrontWord"></div><div class="card-tap-hint" id="t-fc-tap">Нажмите, чтобы перевернуть</div></div>
-          <div class="card-face card-back"><div class="card-label" id="fcBackLabel">Перевод</div><div class="card-word" id="fcBackWord"></div></div>
-        </div>
-      </div>
-      <div class="fc-controls">
-        <button class="btn btn-danger" onclick="rateFC(false)">✗ <span id="t-btn-dunno">Не знаю</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="skipCard()">⏭</button>
-        <button class="btn btn-success" onclick="rateFC(true)">✓ <span id="t-btn-know">Знаю!</span></button>
-      </div>
-    </div>
-    <div id="testMode" style="display:none"><div id="testQuestion"></div></div>
-    <div id="studyResults" style="display:none" class="results-wrap">
-      <div class="glass results-card">
-        <div style="font-size:2.8rem" id="resultsEmoji">🎉</div>
-        <h2 style="margin-top:10px" id="resultsTitle">Готово!</h2>
-        <div class="results-score" id="resultsScore">0/0</div>
-        <div class="results-pct" id="resultsPct"></div>
-        <div class="results-row">
-          <div class="result-item"><span class="rn" style="color:var(--success)" id="resCorrect">0</span><div class="rl" id="t-res-correct">Правильно</div></div>
-          <div class="result-item"><span class="rn" style="color:var(--danger)" id="resWrong">0</span><div class="rl" id="t-res-wrong">Ошибки</div></div>
-          <div class="result-item"><span class="rn" style="color:var(--warning)" id="resSkip">0</span><div class="rl" id="t-res-skip">Пропущено</div></div>
-        </div>
-        <div id="wrongListWrap" class="wrong-list"></div>
-        <div class="results-actions">
-          <button class="btn btn-ghost" onclick="exitStudy()">← <span id="t-res-back">Назад</span></button>
-          <button class="btn btn-primary" onclick="restartStudy()">🔄 <span id="t-res-restart">Ещё раз</span></button>
+        <div class="fc-controls">
+          <button type="button" class="btn btn-danger" id="fcDunnoBtn">✗ <span id="fcDunnoText">Не знаю</span></button>
+          <button type="button" class="btn btn-ghost btn-sm" id="fcSkipBtn" aria-label="Пропустить">⏭</button>
+          <button type="button" class="btn btn-success" id="fcKnowBtn">✓ <span id="fcKnowText">Знаю!</span></button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-overlay" id="studyModal">
-  <div class="glass modal study-modal">
-    <div class="modal-header"><h3 id="studyModalGroupName">Учить</h3><button class="icon-btn" onclick="closeModal('studyModal')">✕</button></div>
-    <div class="form-group">
-      <label id="t-study-mode">Режим изучения</label>
-      <div class="mode-list">
-        <div class="mode-card selected" data-mode="word-to-translate" onclick="selectMode(this)"><span class="mode-icon">🔤</span><div><div class="mode-title" id="t-mode-wt">Слово → Перевод</div><div class="mode-desc" id="t-mode-wt-d">Видите слово — пишете перевод</div></div></div>
-        <div class="mode-card" data-mode="translate-to-word" onclick="selectMode(this)"><span class="mode-icon">🔄</span><div><div class="mode-title" id="t-mode-tw">Перевод → Слово</div><div class="mode-desc" id="t-mode-tw-d">Видите перевод — пишете слово</div></div></div>
-        <div class="mode-card" data-mode="flashcard" onclick="selectMode(this)"><span class="mode-icon">🃏</span><div><div class="mode-title" id="t-mode-fc">Флеш-карточки</div><div class="mode-desc" id="t-mode-fc-d">Листайте и оценивайте себя</div></div></div>
-        <div class="mode-card" data-mode="test" onclick="selectMode(this)"><span class="mode-icon">📝</span><div><div class="mode-title" id="t-mode-test">Тест</div><div class="mode-desc" id="t-mode-test-d">Выбор правильного варианта из 4</div></div></div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label id="t-study-order">Порядок карточек</label>
-      <div class="order-tabs">
-        <div class="order-tab"><input type="radio" name="cardOrder" id="orderSeq" value="sequential" checked><label for="orderSeq" id="t-order-seq">📋 По порядку</label></div>
-        <div class="order-tab"><input type="radio" name="cardOrder" id="orderRnd" value="random"><label for="orderRnd" id="t-order-rnd">🔀 Случайно</label></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('studyModal')" id="t-btn-cancel">Отмена</button>
-      <button class="btn btn-primary" onclick="startStudy()" id="t-btn-start">▶ Начать</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="groupModal">
-  <div class="glass modal">
-    <div class="modal-header"><h3 id="groupModalTitle">Создать группу</h3><button class="icon-btn" onclick="closeModal('groupModal')">✕</button></div>
-    <div class="form-group"><label id="t-grp-name">Название группы</label><input type="text" id="gName" placeholder="Например: Базовые слова"></div>
-    <div class="two-col form-group">
-      <div><label id="t-grp-native">Родной язык</label><select id="gNativeLang" onchange="updateWordRowPlaceholders()"></select></div>
-      <div><label id="t-grp-target">Изучаемый язык</label><select id="gTargetLang" onchange="updateWordRowPlaceholders()"></select></div>
-    </div>
-    <div class="form-group"><label id="t-grp-desc">Описание (необязательно)</label><input type="text" id="gDesc" placeholder="Краткое описание"></div>
-    <div class="form-group">
-      <label id="t-grp-words">Слова и переводы</label>
-      <div class="tab-switcher">
-        <button class="tab-btn active" id="tab-one" onclick="switchWordTab('one-by-one',this)">➕ По одному</button>
-        <button class="tab-btn" id="tab-bulk" onclick="switchWordTab('bulk',this)">📋 Списком</button>
-      </div>
-      <div class="tab-content active" id="tab-content-one-by-one">
-        <div class="words-editor" id="wordsEditor"></div>
-        <div class="add-word-row"><button class="btn btn-ghost btn-sm" onclick="addWordRow()" style="width:100%">➕ <span id="t-add-word">Добавить слово</span></button></div>
-      </div>
-      <div class="tab-content" id="tab-content-bulk">
-        <textarea class="bulk-textarea" id="bulkInput" oninput="onBulkInput()"></textarea>
-        <div class="bulk-hint" id="bulkHint">Форматы: <code>apple - яблоко</code> или <code>apple : яблоко</code> или просто <code>apple</code> (переведётся автоматически)</div>
-        <div class="bulk-actions">
-          <button class="btn btn-primary btn-sm" onclick="translateAllBulk()" id="bulkTranslateBtn">🔄 <span id="t-translate-all">Перевести всё</span></button>
-          <span id="bulkStatus" style="font-size:0.8rem;color:var(--text-muted)"></span>
+      <div id="testMode" hidden><div id="testQuestion"></div></div>
+      <div id="studyResults" class="results-wrap" hidden>
+        <div class="glass results-card">
+          <div class="results-emoji" id="resultsEmoji">🎉</div>
+          <h2 id="resultsTitle">Готово!</h2>
+          <div class="results-score" id="resultsScore">0/0</div>
+          <div class="results-pct" id="resultsPct"></div>
+          <div class="results-row">
+            <div class="result-item"><span class="rn result-correct" id="resCorrect">0</span><div class="rl" id="resCorrectLabel">Правильно</div></div>
+            <div class="result-item"><span class="rn result-almost" id="resAlmost">0</span><div class="rl" id="resAlmostLabel">Почти</div></div>
+            <div class="result-item"><span class="rn result-wrong" id="resWrong">0</span><div class="rl" id="resWrongLabel">Ошибки</div></div>
+            <div class="result-item"><span class="rn result-skip" id="resSkip">0</span><div class="rl" id="resSkipLabel">Пропущено</div></div>
+          </div>
+          <div id="wrongListWrap" class="wrong-list"></div>
+          <div class="results-actions">
+            <button type="button" class="btn btn-ghost" id="resultsBackBtn">← <span id="resultsBackText">Назад</span></button>
+            <button type="button" class="btn btn-success" id="repeatMistakesBtn" hidden>↻ <span id="repeatMistakesText">Повторить ошибки</span></button>
+            <button type="button" class="btn btn-primary" id="restartStudyBtn">🔄 <span id="restartStudyText">Ещё раз</span></button>
+          </div>
         </div>
-        <div class="translate-all-progress" id="translateProgress"><div class="translate-all-bar" id="translateBar"></div></div>
-        <div class="bulk-preview" id="bulkPreview"></div>
       </div>
     </div>
-    <input type="hidden" id="editGroupId">
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('groupModal')" id="t-btn-cancel2">Отмена</button>
-      <button class="btn btn-primary" onclick="saveGroup()" id="t-btn-save">💾 Сохранить</button>
-    </div>
-  </div>
-</div>
+  </section>
 
-<div class="modal-overlay" id="shareModal">
-  <div class="glass modal" style="max-width:460px">
-    <div class="modal-header"><h3 id="t-share-title">Поделиться группой</h3><button class="icon-btn" onclick="closeModal('shareModal')">✕</button></div>
-    <p style="margin-bottom:14px" id="t-share-desc">Скопируйте код и отправьте другому пользователю</p>
-    <div class="share-code-box" id="shareCode"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('shareModal')" id="t-btn-close">Закрыть</button>
-      <button class="btn btn-primary" onclick="copyShareCode()" id="t-btn-copy">📋 Копировать</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="importModal">
-  <div class="glass modal" style="max-width:460px">
-    <div class="modal-header"><h3 id="t-import-title">Импорт группы</h3><button class="icon-btn" onclick="closeModal('importModal')">✕</button></div>
-    <p style="margin-bottom:14px" id="t-import-desc">Вставьте код группы, полученный от другого пользователя</p>
-    <div class="form-group"><label id="t-import-code-label">Код группы</label><textarea id="importCode" style="min-height:80px" placeholder="Вставьте код здесь..."></textarea></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('importModal')" id="t-btn-cancel3">Отмена</button>
-      <button class="btn btn-primary" onclick="importGroup()" id="t-btn-import">Импортировать</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="settingsModal">
-  <div class="glass modal settings-modal">
-    <div class="modal-header"><h3 id="t-settings-title">⚙️ Настройки</h3><button class="icon-btn" onclick="closeModal('settingsModal')">✕</button></div>
-    <div class="settings-block">
-      <h3 id="t-set-appearance">Внешний вид</h3>
-      <div class="settings-row">
-        <div class="sr-info"><div class="sr-title" id="t-set-dark">Тёмная тема</div><div class="sr-desc" id="t-set-dark-d">Переключение между тёмной и светлой темой</div></div>
-        <label class="toggle"><input type="checkbox" id="darkToggle" onchange="onDarkToggle()" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+  <div class="modal-overlay" id="studyModal" hidden>
+    <section class="glass modal study-modal" role="dialog" aria-modal="true" aria-labelledby="studyModalGroupName" tabindex="-1">
+      <div class="modal-header"><h2 id="studyModalGroupName">Учить</h2><button type="button" class="icon-btn modal-close" data-close="studyModal" aria-label="Закрыть">✕</button></div>
+      <div class="form-group">
+        <span class="field-label" id="studyModeLabel">Режим изучения</span>
+        <div class="mode-list" role="group" aria-labelledby="studyModeLabel">
+          <button type="button" class="mode-card selected" data-mode="word-to-translate" aria-pressed="true"><span class="mode-icon">🔤</span><span><span class="mode-title" id="modeWordTitle">Слово → Перевод</span><span class="mode-desc" id="modeWordDesc">Видите слово — пишете перевод</span></span></button>
+          <button type="button" class="mode-card" data-mode="translate-to-word" aria-pressed="false"><span class="mode-icon">🔄</span><span><span class="mode-title" id="modeTranslateTitle">Перевод → Слово</span><span class="mode-desc" id="modeTranslateDesc">Видите перевод — пишете слово</span></span></button>
+          <button type="button" class="mode-card" data-mode="dictation" aria-pressed="false"><span class="mode-icon">✍️</span><span><span class="mode-title" id="modeDictationTitle">Диктант</span><span class="mode-desc" id="modeDictationDesc">Точное написание без поблажек</span></span></button>
+          <button type="button" class="mode-card" data-mode="flashcard" aria-pressed="false"><span class="mode-icon">🃏</span><span><span class="mode-title" id="modeFlashTitle">Флеш-карточки</span><span class="mode-desc" id="modeFlashDesc">Листайте и оценивайте себя</span></span></button>
+          <button type="button" class="mode-card" data-mode="test" aria-pressed="false"><span class="mode-icon">📝</span><span><span class="mode-title" id="modeTestTitle">Тест</span><span class="mode-desc" id="modeTestDesc">Выбор правильного варианта (до 4)</span></span></button>
+        </div>
       </div>
-    </div>
-    <div class="settings-block"><h3 id="t-set-lang-site">Язык интерфейса</h3><div class="lang-site-grid" id="siteLangGrid"></div></div>
-    <div class="settings-block">
-      <h3 id="t-set-default-langs">Языки по умолчанию</h3>
-      <p style="margin-bottom:10px;font-size:0.8rem" id="t-set-default-langs-d">Используются при создании новых групп</p>
-      <div class="two-col">
-        <div class="form-group" style="margin:0"><label id="t-set-native">Родной язык</label><select id="nativeLangSel" onchange="saveSettings()"></select></div>
-        <div class="form-group" style="margin:0"><label id="t-set-target">Изучаемый язык</label><select id="targetLangSel" onchange="saveSettings()"></select></div>
+      <fieldset class="form-group order-fieldset">
+        <legend id="studyOrderLabel">Порядок карточек</legend>
+        <div class="order-tabs">
+          <div class="order-tab"><input type="radio" name="cardOrder" id="orderSeq" value="sequential" checked><label for="orderSeq" id="orderSeqLabel">📋 По порядку</label></div>
+          <div class="order-tab"><input type="radio" name="cardOrder" id="orderRnd" value="random"><label for="orderRnd" id="orderRndLabel">🔀 Случайно</label></div>
+          <div class="order-tab"><input type="radio" name="cardOrder" id="orderDue" value="due"><label for="orderDue" id="orderDueLabel">📅 Сначала к повторению</label></div>
+        </div>
+      </fieldset>
+      <label class="check-row" for="studyDueOnly"><input type="checkbox" id="studyDueOnly"><span id="studyDueOnlyText">Только слова, которые пора повторить</span></label>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close" data-close="studyModal" id="studyCancelBtn">Отмена</button>
+        <button type="button" class="btn btn-primary" id="startStudyBtn">▶ Начать</button>
       </div>
-    </div>
-    <div class="settings-block">
-      <h3 id="t-set-study">Обучение</h3>
-      <div class="settings-row"><div class="sr-info"><div class="sr-title" id="t-set-case">Учитывать регистр</div><div class="sr-desc" id="t-set-case-d">Различать заглавные и строчные буквы</div></div><label class="toggle"><input type="checkbox" id="caseToggle" onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-      <div class="settings-row"><div class="sr-info"><div class="sr-title" id="t-set-fuzzy">Принимать опечатки</div><div class="sr-desc" id="t-set-fuzzy-d">Засчитывать ответы с 1 опечаткой</div></div><label class="toggle"><input type="checkbox" id="fuzzyToggle" onchange="saveSettings()" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-      <div class="settings-row"><div class="sr-info"><div class="sr-title" id="t-set-autohint">Показывать подсказку сразу</div><div class="sr-desc" id="t-set-autohint-d">Автоматически показывать буквы слова</div></div><label class="toggle"><input type="checkbox" id="autoHintToggle" onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-    </div>
-    <div class="settings-block">
-      <h3 id="t-set-data">Данные</h3>
-      <div class="settings-row"><div class="sr-info"><div class="sr-title" id="t-set-backup">Резервная копия</div><div class="sr-desc" id="t-set-backup-d">Скачать все данные в JSON</div></div><button class="btn btn-ghost btn-sm" onclick="backupData()" id="t-btn-dl">💾 Скачать</button></div>
-      <div class="settings-row"><div class="sr-info"><div class="sr-title" id="t-set-restore">Восстановить данные</div><div class="sr-desc" id="t-set-restore-d">Загрузить резервную копию из файла</div></div><label class="btn btn-ghost btn-sm" style="cursor:pointer" id="t-btn-upload">📤 Загрузить<input type="file" accept=".json" style="display:none" onchange="restoreData(event)"></label></div>
-      <div class="settings-row"><div class="sr-info"><div class="sr-title" style="color:var(--danger)" id="t-set-del">Удалить все данные</div><div class="sr-desc" id="t-set-del-d">Безвозвратно удалит всё</div></div><button class="btn btn-danger btn-sm" onclick="confirmDeleteAll()" id="t-btn-del-all">🗑 Удалить</button></div>
-    </div>
-    <div style="text-align:center;padding-top:8px"><p style="font-size:0.76rem" id="t-footer">LinguaCards v2.0 · Данные хранятся в вашем браузере</p></div>
+    </section>
   </div>
-</div>
 
-<div class="modal-overlay" id="confirmModal">
-  <div class="glass modal" style="max-width:360px">
-    <div class="modal-header"><h3 id="confirmTitle">Подтверждение</h3><button class="icon-btn" onclick="closeModal('confirmModal')">✕</button></div>
-    <p id="confirmText" style="margin-bottom:20px"></p>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('confirmModal')" id="t-btn-cancel4">Отмена</button>
-      <button class="btn btn-danger" id="confirmOkBtn">Удалить</button>
-    </div>
+  <div class="modal-overlay" id="groupModal" hidden>
+    <section class="glass modal group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle" tabindex="-1">
+      <form id="groupForm" novalidate>
+        <div class="modal-header"><h2 id="groupModalTitle">Создать группу</h2><button type="button" class="icon-btn modal-close" data-close="groupModal" aria-label="Закрыть">✕</button></div>
+        <div class="form-group"><label for="gName" id="groupNameLabel">Название группы</label><input type="text" id="gName" maxlength="200" placeholder="Например: Базовые слова" required></div>
+        <div class="two-col form-group">
+          <div><label for="gNativeLang" id="groupNativeLabel">Родной язык</label><select id="gNativeLang"></select></div>
+          <div><label for="gTargetLang" id="groupTargetLabel">Изучаемый язык</label><select id="gTargetLang"></select></div>
+        </div>
+        <div class="form-group"><label for="gDesc" id="groupDescLabel">Описание (необязательно)</label><input type="text" id="gDesc" maxlength="2000" placeholder="Краткое описание"></div>
+        <div class="form-group">
+          <span class="field-label" id="groupWordsLabel">Слова и переводы</span>
+          <div class="tab-switcher" role="tablist" aria-labelledby="groupWordsLabel">
+            <button type="button" class="tab-btn active" id="tab-one" role="tab" aria-selected="true" aria-controls="tab-content-one-by-one">➕ <span id="tabOneText">По одному</span></button>
+            <button type="button" class="tab-btn" id="tab-bulk" role="tab" aria-selected="false" aria-controls="tab-content-bulk">📋 <span id="tabBulkText">Списком</span></button>
+          </div>
+          <div class="tab-content active" id="tab-content-one-by-one" role="tabpanel" aria-labelledby="tab-one">
+            <div class="words-editor" id="wordsEditor"></div>
+            <div class="add-word-row"><button type="button" class="btn btn-ghost btn-sm full-width" id="addWordBtn">➕ <span id="addWordText">Добавить слово</span></button></div>
+          </div>
+          <div class="tab-content" id="tab-content-bulk" role="tabpanel" aria-labelledby="tab-bulk" hidden>
+            <label class="sr-only" for="bulkInput">Список слов</label>
+            <textarea class="bulk-textarea" id="bulkInput"></textarea>
+            <div class="bulk-hint" id="bulkHint">Форматы: <code>apple - яблоко</code>, <code>apple : яблоко</code> или просто <code>apple</code>. Строки из списка добавятся к словам выше.</div>
+            <div class="bulk-actions">
+              <button type="button" class="btn btn-primary btn-sm" id="bulkTranslateBtn">🔄 <span id="translateAllText">Перевести всё</span></button>
+              <span id="bulkStatus" class="bulk-status" role="status"></span>
+            </div>
+            <div class="translate-all-progress" id="translateProgress" hidden><div class="translate-all-bar" id="translateBar"></div></div>
+            <div class="bulk-preview" id="bulkPreview"></div>
+          </div>
+        </div>
+        <input type="hidden" id="editGroupId">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost modal-close" data-close="groupModal" id="groupCancelBtn">Отмена</button>
+          <button type="submit" class="btn btn-primary" id="saveGroupBtn">💾 Сохранить</button>
+        </div>
+      </form>
+    </section>
   </div>
-</div>
 
-<div id="toastWrap"></div>
-
-<script>
-// ============================================================
-// TRANSLATE PROXY
-// ============================================================
-const TRANSLATE_PROXY='https://functions.yandexcloud.net/d4e84mujc8k6p8cfvslp';
-async function translateWord(text,sourceLang,targetLang){
-  const res=await fetch(TRANSLATE_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,sourceLang,targetLang})});
-  if(!res.ok)throw new Error('HTTP '+res.status);
-  const data=await res.json();
-  if(data.error)throw new Error(data.error);
-  return data.translation;
-}
-
-// ============================================================
-// i18n
-// ============================================================
-const SITE_LANGS=['ru','en','de','fr','es'];
-const SITE_LANG_NAMES={ru:'Русский',en:'English',de:'Deutsch',fr:'Français',es:'Español'};
-const TR={
-ru:{
-  'groups-title':'Мои группы','groups-sub':'Управляйте наборами слов',
-  'btn-import':'Импорт','btn-create':'Создать',
-  'stats-title':'📊 Статистика','stats-sub':'Ваш прогресс в изучении слов',
-  'st-sessions':'Сессий','st-correct':'Правильных','st-acc':'Точность',
-  'st-by-group':'По группам','st-recent':'Последние сессии',
-  'study-mode':'Режим изучения','study-order':'Порядок карточек',
-  'mode-wt':'Слово → Перевод','mode-wt-d':'Видите слово — пишете перевод',
-  'mode-tw':'Перевод → Слово','mode-tw-d':'Видите перевод — пишете слово',
-  'mode-fc':'Флеш-карточки','mode-fc-d':'Листайте и оценивайте себя',
-  'mode-test':'Тест','mode-test-d':'Выбор правильного варианта из 4',
-  'order-seq':'📋 По порядку','order-rnd':'🔀 Случайно',
-  'btn-back':'Назад','btn-hint':'Подсказка','btn-skip':'Пропустить',
-  'btn-dunno':'Не знаю','btn-know':'Знаю!','btn-cancel':'Отмена','btn-start':'▶ Начать',
-  'btn-cancel2':'Отмена','btn-save':'💾 Сохранить','btn-close':'Закрыть',
-  'btn-copy':'📋 Копировать','btn-cancel3':'Отмена','btn-cancel4':'Отмена',
-  'btn-dl':'💾 Скачать','btn-upload':'📤 Загрузить','btn-del-all':'🗑 Удалить',
-  'fc-tap':'Нажмите, чтобы перевернуть',
-  'res-correct':'Правильно','res-wrong':'Ошибки','res-skip':'Пропущено',
-  'res-back':'Назад','res-restart':'Ещё раз',
-  'grp-name':'Название группы','grp-native':'Родной язык','grp-target':'Изучаемый язык',
-  'grp-desc':'Описание (необязательно)','grp-words':'Слова и переводы',
-  'add-word':'Добавить слово','translate-all':'Перевести всё',
-  'share-title':'Поделиться группой','share-desc':'Скопируйте код и отправьте другому пользователю',
-  'import-title':'Импорт группы','import-desc':'Вставьте код группы от другого пользователя',
-  'import-code-label':'Код группы','settings-title':'⚙️ Настройки',
-  'set-appearance':'Внешний вид','set-dark':'Тёмная тема','set-dark-d':'Переключение темы',
-  'set-lang-site':'Язык интерфейса','set-default-langs':'Языки по умолчанию',
-  'set-default-langs-d':'Используются при создании новых групп',
-  'set-native':'Родной язык','set-target':'Изучаемый язык','set-study':'Обучение',
-  'set-case':'Учитывать регистр','set-case-d':'Различать заглавные и строчные буквы',
-  'set-fuzzy':'Принимать опечатки','set-fuzzy-d':'Засчитывать ответы с 1 опечаткой',
-  'set-autohint':'Показывать подсказку сразу','set-autohint-d':'Показывать буквы слова',
-  'set-data':'Данные','set-backup':'Резервная копия','set-backup-d':'Скачать все данные в JSON',
-  'set-restore':'Восстановить данные','set-restore-d':'Загрузить резервную копию',
-  'set-del':'Удалить все данные','set-del-d':'Безвозвратно удалит всё',
-  'footer':'LinguaCards v2.0 · Данные хранятся в вашем браузере',
-  'nav-groups':'📚 Группы','nav-stats':'📊 Статистика',
-  'no-groups':'Групп пока нет','no-groups-sub':'Нажмите «Создать» чтобы добавить первую группу',
-  'no-stats':'Нет данных','words':'слов',
-  'confirm-del-group':'Удалить группу?','confirm-del-group-t':'Группа и все её слова будут удалены безвозвратно.',
-  'confirm-del-all':'Удалить ВСЕ данные?','confirm-del-all-t':'Это необратимо! Все группы и статистика будут удалены.',
-  'toast-created':'Группа создана!','toast-saved':'Группа обновлена!','toast-deleted':'Группа удалена',
-  'toast-imported':'Группа импортирована','toast-copied':'Скопировано!',
-  'toast-backup':'Резервная копия скачана','toast-restored':'Данные восстановлены',
-  'toast-restore-fail':'Ошибка при восстановлении','toast-all-del':'Все данные удалены',
-  'toast-no-word':'Введите слово','toast-no-name':'Введите название группы',
-  'toast-no-words':'Добавьте хотя бы одно слово','toast-bad-import':'Неверный код группы',
-  'toast-translate-err':'Ошибка перевода','toast-lang-changed':'Язык интерфейса изменён',
-  'res-excellent':'Отличный результат!','res-good':'Хорошая работа!',
-  'res-ok':'Неплохо! Продолжайте!','res-low':'Продолжайте стараться!',
-  'wrong-words-label':'Слова с ошибками:',
-  'btn-learn':'▶ Учить','btn-edit':'✏ Ред.','btn-share':'🔗 Поделиться',
-  'card-word':'Слово','card-translate':'Перевод',
-  'bulk-no-translate':'н  т перевода','bulk-translating':'переводится...',
-  'bulk-status-done':'Все переведены!','bulk-status-need':'без перевода',
-},
-en:{
-  'groups-title':'My Groups','groups-sub':'Manage your word sets',
-  'btn-import':'Import','btn-create':'Create',
-  'stats-title':'📊 Statistics','stats-sub':'Your word learning progress',
-  'st-sessions':'Sessions','st-correct':'Correct','st-acc':'Accuracy',
-  'st-by-group':'By group','st-recent':'Recent sessions',
-  'study-mode':'Study mode','study-order':'Card order',
-  'mode-wt':'Word → Translation','mode-wt-d':'See word — type translation',
-  'mode-tw':'Translation → Word','mode-tw-d':'See translation — type word',
-  'mode-fc':'Flashcards','mode-fc-d':'Flip through and rate yourself',
-  'mode-test':'Test','mode-test-d':'Choose the correct answer from 4',
-  'order-seq':'📋 Sequential','order-rnd':'🔀 Random',
-  'btn-back':'Back','btn-hint':'Hint','btn-skip':'Skip',
-  'btn-dunno':"Don't know",'btn-know':'I know!','btn-cancel':'Cancel','btn-start':'▶ Start',
-  'btn-cancel2':'Cancel','btn-save':'💾 Save','btn-close':'Close',
-  'btn-copy':'📋 Copy','btn-cancel3':'Cancel','btn-cancel4':'Cancel',
-  'btn-dl':'💾 Download','btn-upload':'📤 Upload','btn-del-all':'🗑 Delete',
-  'fc-tap':'Tap to flip',
-  'res-correct':'Correct','res-wrong':'Mistakes','res-skip':'Skipped',
-  'res-back':'Back','res-restart':'Again',
-  'grp-name':'Group name','grp-native':'Native language','grp-target':'Learning language',
-  'grp-desc':'Description (optional)','grp-words':'Words and translations',
-  'add-word':'Add word','translate-all':'Translate all',
-  'share-title':'Share group','share-desc':'Copy the code and send it',
-  'import-title':'Import group','import-desc':'Paste the group code',
-  'import-code-label':'Group code','settings-title':'⚙️ Settings',
-  'set-appearance':'Appearance','set-dark':'Dark theme','set-dark-d':'Toggle theme',
-  'set-lang-site':'Interface language','set-default-langs':'Default languages',
-  'set-default-langs-d':'Used when creating new groups',
-  'set-native':'Native language','set-target':'Learning language','set-study':'Study',
-  'set-case':'Case sensitive','set-case-d':'Distinguish uppercase and lowercase',
-  'set-fuzzy':'Accept typos','set-fuzzy-d':'Accept answers with 1 typo',
-  'set-autohint':'Show hint immediately','set-autohint-d':'Show word letters',
-  'set-data':'Data','set-backup':'Backup','set-backup-d':'Download all data as JSON',
-  'set-restore':'Restore data','set-restore-d':'Load backup from file',
-  'set-del':'Delete all data','set-del-d':'Irreversibly deletes everything',
-  'footer':'LinguaCards v2.0 · Data stored in your browser',
-  'nav-groups':'📚 Groups','nav-stats':'📊 Statistics',
-  'no-groups':'No groups yet','no-groups-sub':'Click Create to add your first group',
-  'no-stats':'No data','words':'words',
-  'confirm-del-group':'Delete group?','confirm-del-group-t':'The group will be permanently deleted.',
-  'confirm-del-all':'Delete ALL data?','confirm-del-all-t':'Irreversible! Everything will be deleted.',
-  'toast-created':'Group created!','toast-saved':'Group updated!','toast-deleted':'Group deleted',
-  'toast-imported':'Group imported','toast-copied':'Copied!',
-  'toast-backup':'Backup downloaded','toast-restored':'Data restored',
-  'toast-restore-fail':'Restore failed','toast-all-del':'All data deleted',
-  'toast-no-word':'Enter a word','toast-no-name':'Enter a group name',
-  'toast-no-words':'Add at least one word','toast-bad-import':'Invalid group code',
-  'toast-translate-err':'Translation error','toast-lang-changed':'Language changed',
-  'res-excellent':'Excellent!','res-good':'Good job!','res-ok':'Not bad!','res-low':'Keep trying!',
-  'wrong-words-label':'Words with mistakes:',
-  'btn-learn':'▶ Study','btn-edit':'✏ Edit','btn-share':'🔗 Share',
-  'card-word':'Word','card-translate':'Translation',
-  'bulk-no-translate':'no translation','bulk-translating':'translating...',
-  'bulk-status-done':'All translated!','bulk-status-need':'without translation',
-},
-de:{
-  'groups-title':'Meine Gruppen','groups-sub':'Wortgruppen verwalten',
-  'btn-import':'Importieren','btn-create':'Erstellen',
-  'stats-title':'📊 Statistik','stats-sub':'Dein Lernfortschritt',
-  'st-sessions':'Sitzungen','st-correct':'Richtig','st-acc':'Genauigkeit',
-  'st-by-group':'Nach Gruppe','st-recent':'Letzte Sitzungen',
-  'study-mode':'Lernmodus','study-order':'Kartenreihenfolge',
-  'mode-wt':'Wort → Übersetzung','mode-wt-d':'Wort sehen — Übersetzung schreiben',
-  'mode-tw':'Übersetzung → Wort','mode-tw-d':'Übersetzung sehen — Wort schreiben',
-  'mode-fc':'Karteikarten','mode-fc-d':'Blättern und bewerten',
-  'mode-test':'Test','mode-test-d':'Richtige Antwort aus 4 wählen',
-  'order-seq':'📋 Nacheinander','order-rnd':'🔀 Zufällig',
-  'btn-back':'Zurück','btn-hint':'Hinweis','btn-skip':'Überspringen',
-  'btn-dunno':'Weiß nicht','btn-know':'Weiß ich!','btn-cancel':'Abbrechen','btn-start':'▶ Starten',
-  'btn-cancel2':'Abbrechen','btn-save':'💾 Speichern','btn-close':'Schließen',
-  'btn-copy':'📋 Kopieren','btn-cancel3':'Abbrechen','btn-cancel4':'Abbrechen',
-  'btn-dl':'💾 Herunterladen','btn-upload':'📤 Hochladen','btn-del-all':'🗑 Löschen',
-  'fc-tap':'Zum Umdrehen tippen',
-  'res-correct':'Richtig','res-wrong':'Fehler','res-skip':'Übersprungen',
-  'res-back':'Zurück','res-restart':'Nochmal',
-  'grp-name':'Gruppenname','grp-native':'Muttersprache','grp-target':'Lernsprache',
-  'grp-desc':'Beschreibung (optional)','grp-words':'Wörter und Übersetzungen',
-  'add-word':'Wort hinzufügen','translate-all':'Alle übersetzen',
-  'share-title':'Gruppe teilen','share-desc':'Code kopieren und senden',
-  'import-title':'Gruppe importieren','import-desc':'Code einfügen',
-  'import-code-label':'Gruppencode','settings-title':'⚙️ Einstellungen',
-  'set-appearance':'Erscheinungsbild','set-dark':'Dunkles Theme','set-dark-d':'Theme wechseln',
-  'set-lang-site':'Oberflächensprache','set-default-langs':'Standardsprachen',
-  'set-default-langs-d':'Beim Erstellen neuer Gruppen verwendet',
-  'set-native':'Muttersprache','set-target':'Lernsprache','set-study':'Lernen',
-  'set-case':'Groß-/Kleinschreibung','set-case-d':'Unterscheiden',
-  'set-fuzzy':'Tippfehler akzeptieren','set-fuzzy-d':'1 Tippfehler erlaubt',
-  'set-autohint':'Hinweis sofort','set-autohint-d':'Buchstaben anzeigen',
-  'set-data':'Daten','set-backup':'Sicherung','set-backup-d':'Als JSON herunterladen',
-  'set-restore':'Wiederherstellen','set-restore-d':'Aus Datei laden',
-  'set-del':'Alle Daten löschen','set-del-d':'Unwiderruflich',
-  'footer':'LinguaCards v2.0 · Im Browser gespeichert',
-  'nav-groups':'📚 Gruppen','nav-stats':'📊 Statistik',
-  'no-groups':'Noch keine Gruppen','no-groups-sub':'Erstellen klicken',
-  'no-stats':'Keine Daten','words':'Wörter',
-  'confirm-del-group':'Gruppe löschen?','confirm-del-group-t':'Dauerhaft gelöscht.',
-  'confirm-del-all':'ALLE Daten löschen?','confirm-del-all-t':'Nicht rückgängig!',
-  'toast-created':'Erstellt!','toast-saved':'Aktualisiert!','toast-deleted':'Gelöscht',
-  'toast-imported':'Importiert','toast-copied':'Kopiert!',
-  'toast-backup':'Heruntergeladen','toast-restored':'Wiederhergestellt',
-  'toast-restore-fail':'Fehler','toast-all-del':'Alles gelöscht',
-  'toast-no-word':'Wort eingeben','toast-no-name':'Name eingeben',
-  'toast-no-words':'Mindestens ein Wort','toast-bad-import':'Ungültiger Code',
-  'toast-translate-err':'Übersetzungsfehler','toast-lang-changed':'Sprache geändert',
-  'res-excellent':'Ausgezeichnet!','res-good':'Gut!','res-ok':'Nicht schlecht!','res-low':'Weiter!',
-  'wrong-words-label':'Fehler:',
-  'btn-learn':'▶ Lernen','btn-edit':'✏ Bearbeiten','btn-share':'🔗 Teilen',
-  'card-word':'Wort','card-translate':'Übersetzung',
-  'bulk-no-translate':'keine Übersetzung','bulk-translating':'wird übersetzt...',
-  'bulk-status-done':'Alle übersetzt!','bulk-status-need':'ohne Übersetzung',
-},
-fr:{
-  'groups-title':'Mes groupes','groups-sub':'Gérez vos ensembles de mots',
-  'btn-import':'Importer','btn-create':'Créer',
-  'stats-title':'📊 Statistiques','stats-sub':'Votre progression',
-  'st-sessions':'Sessions','st-correct':'Correct','st-acc':'Précision',
-  'st-by-group':'Par groupe','st-recent':'Sessions récentes',
-  'study-mode':'Mode d\'apprentissage','study-order':'Ordre des cartes',
-  'mode-wt':'Mot → Traduction','mode-wt-d':'Voyez le mot — écrivez la traduction',
-  'mode-tw':'Traduction → Mot','mode-tw-d':'Voyez la traduction — écrivez le mot',
-  'mode-fc':'Flashcards','mode-fc-d':'Parcourez et évaluez',
-  'mode-test':'Test','mode-test-d':'Choisissez parmi 4 réponses',
-  'order-seq':'📋 Dans l\'ordre','order-rnd':'🔀 Aléatoire',
-  'btn-back':'Retour','btn-hint':'Indice','btn-skip':'Passer',
-  'btn-dunno':'Je ne sais pas','btn-know':'Je sais !','btn-cancel':'Annuler','btn-start':'▶ Commencer',
-  'btn-cancel2':'Annuler','btn-save':'💾 Enregistrer','btn-close':'Fermer',
-  'btn-copy':'📋 Copier','btn-cancel3':'Annuler','btn-cancel4':'Annuler',
-  'btn-dl':'💾 Télécharger','btn-upload':'📤 Charger','btn-del-all':'🗑 Supprimer',
-  'fc-tap':'Appuyez pour retourner',
-  'res-correct':'Correct','res-wrong':'Erreurs','res-skip':'Sauté',
-  'res-back':'Retour','res-restart':'Rejouer',
-  'grp-name':'Nom du groupe','grp-native':'Langue maternelle','grp-target':'Langue apprise',
-  'grp-desc':'Description (facultatif)','grp-words':'Mots et traductions',
-  'add-word':'Ajouter un mot','translate-all':'Tout traduire',
-  'share-title':'Partager','share-desc':'Copiez le code',
-  'import-title':'Importer','import-desc':'Collez le code',
-  'import-code-label':'Code','settings-title':'⚙️ Paramètres',
-  'set-appearance':'Apparence','set-dark':'Thème sombre','set-dark-d':'Changer de thème',
-  'set-lang-site':'Langue de l\'interface','set-default-langs':'Langues par défaut',
-  'set-default-langs-d':'Pour les nouveaux groupes',
-  'set-native':'Langue maternelle','set-target':'Langue apprise','set-study':'Apprentissage',
-  'set-case':'Sensible à la casse','set-case-d':'Majuscules/minuscules',
-  'set-fuzzy':'Accepter les fautes','set-fuzzy-d':'1 faute de frappe',
-  'set-autohint':'Indice immédiat','set-autohint-d':'Afficher les lettres',
-  'set-data':'Données','set-backup':'Sauvegarde','set-backup-d':'En JSON',
-  'set-restore':'Restaurer','set-restore-d':'Depuis un fichier',
-  'set-del':'Tout supprimer','set-del-d':'Irréversible',
-  'footer':'LinguaCards v2.0 · Dans votre navigateur',
-  'nav-groups':'📚 Groupes','nav-stats':'📊 Statistiques',
-  'no-groups':'Pas encore de groupes','no-groups-sub':'Cliquez Créer',
-  'no-stats':'Pas de données','words':'mots',
-  'confirm-del-group':'Supprimer ?','confirm-del-group-t':'Suppression définitive.',
-  'confirm-del-all':'Supprimer TOUT ?','confirm-del-all-t':'Irréversible !',
-  'toast-created':'Créé !','toast-saved':'Mis à jour !','toast-deleted':'Supprimé',
-  'toast-imported':'Importé','toast-copied':'Copié !',
-  'toast-backup':'Téléchargé','toast-restored':'Restauré',
-  'toast-restore-fail':'Échec','toast-all-del':'Tout supprimé',
-  'toast-no-word':'Entrez un mot','toast-no-name':'Entrez un nom',
-  'toast-no-words':'Au moins un mot','toast-bad-import':'Code invalide',
-  'toast-translate-err':'Erreur de traduction','toast-lang-changed':'Langue modifiée',
-  'res-excellent':'Excellent !','res-good':'Bien !','res-ok':'Pas mal !','res-low':'Continuez !',
-  'wrong-words-label':'Erreurs :',
-  'btn-learn':'▶ Apprendre','btn-edit':'✏ Modifier','btn-share':'🔗 Partager',
-  'card-word':'Mot','card-translate':'Traduction',
-  'bulk-no-translate':'pas de traduction','bulk-translating':'traduction...',
-  'bulk-status-done':'Tout traduit !','bulk-status-need':'sans traduction',
-},
-es:{
-  'groups-title':'Mis grupos','groups-sub':'Gestiona tus conjuntos de palabras',
-  'btn-import':'Importar','btn-create':'Crear',
-  'stats-title':'📊 Estadísticas','stats-sub':'Tu progreso',
-  'st-sessions':'Sesiones','st-correct':'Correctas','st-acc':'Precisión',
-  'st-by-group':'Por grupo','st-recent':'Sesiones recientes',
-  'study-mode':'Modo de estudio','study-order':'Orden de tarjetas',
-  'mode-wt':'Palabra → Traducción','mode-wt-d':'Ves la palabra — escribe la traducción',
-  'mode-tw':'Traducción → Palabra','mode-tw-d':'Ves la traducción — escribe la palabra',
-  'mode-fc':'Tarjetas','mode-fc-d':'Pasa y valórate',
-  'mode-test':'Test','mode-test-d':'Elige de 4 respuestas',
-  'order-seq':'📋 En orden','order-rnd':'🔀 Aleatorio',
-  'btn-back':'Atrás','btn-hint':'Pista','btn-skip':'Saltar',
-  'btn-dunno':'No sé','btn-know':'¡Sé!','btn-cancel':'Cancelar','btn-start':'▶ Empezar',
-  'btn-cancel2':'Cancelar','btn-save':'💾 Guardar','btn-close':'Cerrar',
-  'btn-copy':'📋 Copiar','btn-cancel3':'Cancelar','btn-cancel4':'Cancelar',
-  'btn-dl':'💾 Descargar','btn-upload':'📤 Subir','btn-del-all':'🗑 Eliminar',
-  'fc-tap':'Toca para voltear',
-  'res-correct':'Correcto','res-wrong':'Errores','res-skip':'Omitido',
-  'res-back':'Atrás','res-restart':'Otra vez',
-  'grp-name':'Nombre del grupo','grp-native':'Idioma nativo','grp-target':'Idioma aprendido',
-  'grp-desc':'Descripción (opcional)','grp-words':'Palabras y traducciones',
-  'add-word':'Añadir palabra','translate-all':'Traducir todo',
-  'share-title':'Compartir','share-desc':'Copia el código',
-  'import-title':'Importar','import-desc':'Pega el código',
-  'import-code-label':'Código','settings-title':'⚙️ Ajustes',
-  'set-appearance':'Apariencia','set-dark':'Tema oscuro','set-dark-d':'Cambiar tema',
-  'set-lang-site':'Idioma de interfaz','set-default-langs':'Idiomas predeterminados',
-  'set-default-langs-d':'Para nuevos grupos',
-  'set-native':'Idioma nativo','set-target':'Idioma aprendido','set-study':'Estudio',
-  'set-case':'Mayúsculas','set-case-d':'Distinguir mayúsculas',
-  'set-fuzzy':'Aceptar erratas','set-fuzzy-d':'1 errata permitida',
-  'set-autohint':'Pista inmediata','set-autohint-d':'Mostrar letras',
-  'set-data':'Datos','set-backup':'Copia de seguridad','set-backup-d':'En JSON',
-  'set-restore':'Restaurar','set-restore-d':'Desde archivo',
-  'set-del':'Eliminar todo','set-del-d':'Irreversible',
-  'footer':'LinguaCards v2.0 · En tu navegador',
-  'nav-groups':'📚 Grupos','nav-stats':'📊 Estadísticas',
-  'no-groups':'Sin grupos','no-groups-sub':'Haz clic en Crear',
-  'no-stats':'Sin datos','words':'palabras',
-  'confirm-del-group':'¿Eliminar?','confirm-del-group-t':'Eliminación permanente.',
-  'confirm-del-all':'¿Eliminar TODO?','confirm-del-all-t':'¡Irreversible!',
-  'toast-created':'¡Creado!','toast-saved':'¡Actualizado!','toast-deleted':'Eliminado',
-  'toast-imported':'Importado','toast-copied':'¡Copiado!',
-  'toast-backup':'Descargado','toast-restored':'Restaurado',
-  'toast-restore-fail':'Error','toast-all-del':'Todo eliminado',
-  'toast-no-word':'Ingresa una palabra','toast-no-name':'Ingresa un nombre',
-  'toast-no-words':'Al menos una palabra','toast-bad-import':'Código inválido',
-  'toast-translate-err':'Error de traducción','toast-lang-changed':'Idioma cambiado',
-  'res-excellent':'¡Excelente!','res-good':'¡Bien!','res-ok':'¡Nada mal!','res-low':'¡Continúa!',
-  'wrong-words-label':'Errores:',
-  'btn-learn':'▶ Estudiar','btn-edit':'✏ Editar','btn-share':'🔗 Compartir',
-  'card-word':'Palabra','card-translate':'Traducción',
-  'bulk-no-translate':'sin traducción','bulk-translating':'traduciendo...',
-  'bulk-status-done':'¡Todo traducido!','bulk-status-need':'sin traducción',
-}
-};
-function t(key){const l=appData?.settings?.siteLang||'ru';return(TR[l]&&TR[l][key])||(TR.ru&&TR.ru[key])||key;}
-function applyI18n(){
-  document.querySelector('[data-page="groups"]').textContent=t('nav-groups');
-  document.querySelector('[data-page="stats"]').textContent=t('nav-stats');
-  document.querySelectorAll('[id^="t-"]').forEach(el=>{
-    const key=el.id.replace(/^t-/,'');
-    const val=t(key);if(val!==key)el.textContent=val;
-  });
-  document.getElementById('tab-one').textContent='➕ '+(t('nav-groups')==='📚 Группы'?'По одному':'One by one'||t('add-word'));
-  document.getElementById('tab-bulk').textContent='📋 '+(t('nav-groups')==='📚 Группы'?'Списком':'Bulk');
-  updateWordRowPlaceholders();
-}
-
-// ============================================================
-// STUDY LANGUAGES
-// ============================================================
-const STUDY_LANGS=[
-  {id:'ru',name:'Русский',flag:'🇷🇺'},{id:'en',name:'English',flag:'🇬🇧'},
-  {id:'de',name:'Deutsch',flag:'🇩🇪'},{id:'fr',name:'Français',flag:'🇫🇷'},
-  {id:'es',name:'Español',flag:'🇪🇸'},{id:'it',name:'Italiano',flag:'🇮🇹'},
-  {id:'pt',name:'Português',flag:'🇵🇹'},{id:'zh',name:'中文',flag:'🇨🇳'},
-  {id:'ja',name:'日本語',flag:'🇯🇵'},{id:'ko',name:'한국어',flag:'🇰🇷'},
-  {id:'ar',name:'العربية',flag:'🇸🇦'},{id:'tr',name:'Türkçe',flag:'🇹🇷'},
-  {id:'pl',name:'Polski',flag:'🇵🇱'},{id:'nl',name:'Nederlands',flag:'🇳🇱'},
-  {id:'sv',name:'Svenska',flag:'🇸🇪'},
-];
-function getLang(id){return STUDY_LANGS.find(l=>l.id===id)||{flag:'🌐',name:'?',id};}
-
-// ============================================================
-// DATA
-// ============================================================
-let appData={
-  groups:[],
-  stats:{sessions:0,totalCorrect:0,totalWrong:0,totalSkipped:0,byGroup:{},sessions_log:[]},
-  settings:{darkMode:true,siteLang:'ru',caseSensitive:false,fuzzy:true,autoHint:false,nativeLang:'ru',targetLang:'en'}
-};
-function saveData(){try{localStorage.setItem('lc3_data',JSON.stringify(appData));}catch(e){}}
-function loadData(){
-  try{
-    const s=localStorage.getItem('lc3_data');
-    if(s){
-      const p=JSON.parse(s);
-      appData=Object.assign({},appData,p);
-      if(!appData.stats.byGroup)appData.stats.byGroup={};
-      if(!appData.stats.sessions_log)appData.stats.sessions_log=[];
-    }
-  }catch(e){}
-}
-
-// ============================================================
-// SETTINGS
-// ============================================================
-function applySettings(){
-  document.body.className=appData.settings.darkMode?'dark':'light';
-  document.getElementById('themeBtn').textContent=appData.settings.darkMode?'🌙':'☀️';
-  document.getElementById('darkToggle').checked=appData.settings.darkMode;
-  document.getElementById('caseToggle').checked=appData.settings.caseSensitive;
-  document.getElementById('fuzzyToggle').checked=appData.settings.fuzzy;
-  document.getElementById('autoHintToggle').checked=appData.settings.autoHint;
-  populateLangSelects();
-  renderSiteLangGrid();
-  applyI18n();
-}
-function saveSettings(){
-  appData.settings.darkMode=document.getElementById('darkToggle').checked;
-  appData.settings.caseSensitive=document.getElementById('caseToggle').checked;
-  appData.settings.fuzzy=document.getElementById('fuzzyToggle').checked;
-  appData.settings.autoHint=document.getElementById('autoHintToggle').checked;
-  appData.settings.nativeLang=document.getElementById('nativeLangSel').value;
-  appData.settings.targetLang=document.getElementById('targetLangSel').value;
-  applySettings();saveData();
-}
-function onDarkToggle(){
-  appData.settings.darkMode=document.getElementById('darkToggle').checked;
-  document.body.className=appData.settings.darkMode?'dark':'light';
-  document.getElementById('themeBtn').textContent=appData.settings.darkMode?'🌙':'☀️';
-  saveData();
-}
-function toggleTheme(){
-  appData.settings.darkMode=!appData.settings.darkMode;
-  document.body.className=appData.settings.darkMode?'dark':'light';
-  document.getElementById('themeBtn').textContent=appData.settings.darkMode?'🌙':'☀️';
-  document.getElementById('darkToggle').checked=appData.settings.darkMode;
-  saveData();
-}
-function openSettings(){applySettings();openModal('settingsModal');}
-function populateLangSelects(){
-  const opts=STUDY_LANGS.map(l=>`<option value="${l.id}">${l.flag} ${l.name}</option>`).join('');
-  ['nativeLangSel','targetLangSel','gNativeLang','gTargetLang'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.innerHTML=opts;
-  });
-  const ns=document.getElementById('nativeLangSel');
-  const ts=document.getElementById('targetLangSel');
-  if(ns)ns.value=appData.settings.nativeLang;
-  if(ts)ts.value=appData.settings.targetLang;
-}
-function renderSiteLangGrid(){
-  document.getElementById('siteLangGrid').innerHTML=SITE_LANGS.map(l=>
-    `<button class="lang-site-opt${appData.settings.siteLang===l?' active':''}" onclick="setSiteLang('${l}')">${SITE_LANG_NAMES[l]}</button>`
-  ).join('');
-}
-function setSiteLang(l){
-  appData.settings.siteLang=l;saveData();applyI18n();renderSiteLangGrid();renderGroups();
-  showToast(t('toast-lang-changed'),'success');
-}
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const page=document.getElementById('page-'+id);if(page)page.classList.add('active');
-  const btn=document.querySelector(`[data-page="${id}"]`);if(btn)btn.classList.add('active');
-  if(id==='groups')renderGroups();
-  if(id==='stats')renderStats();
-}
-
-// ============================================================
-// WORD ROW — только плейсхолдеры, никаких заголовков
-// ============================================================
-function updateWordRowPlaceholders(){
-  const nid=document.getElementById('gNativeLang')?.value||appData.settings.nativeLang;
-  const tid=document.getElementById('gTargetLang')?.value||appData.settings.targetLang;
-  const nl=getLang(nid);
-  const tl=getLang(tid);
-  // Левое поле = изучаемый язык (слово которое учим)
-  document.querySelectorAll('.word-input-w').forEach(i=>i.placeholder=`${tl.flag} ${tl.name}`);
-  // Правое поле = родной язык (перевод)
-  document.querySelectorAll('.word-input-t').forEach(i=>i.placeholder=`${nl.flag} ${nl.name}`);
-}
-
-function addWordRow(word='',translate=''){
-  const editor=document.getElementById('wordsEditor');
-  const nid=document.getElementById('gNativeLang')?.value||appData.settings.nativeLang;
-  const tid=document.getElementById('gTargetLang')?.value||appData.settings.targetLang;
-  const nl=getLang(nid);
-  const tl=getLang(tid);
-  const div=document.createElement('div');
-  div.className='word-row';
-  div.innerHTML=`
-    <div class="word-row-inputs">
-      <input class="word-input-w" type="text" placeholder="${tl.flag} ${tl.name}" value="${esc(word)}" autocomplete="off">
-      <div class="lang-sep">→</div>
-      <input class="word-input-t" type="text" placeholder="${nl.flag} ${nl.name}" value="${esc(translate)}" autocomplete="off">
-    </div>
-    <button class="translate-btn" title="Перевести" onclick="autoTranslateRow(this)">🔄</button>
-    <button class="remove-word-btn" onclick="this.parentElement.remove()">✕</button>`;
-  editor.appendChild(div);
-  if(!word)div.querySelector('.word-input-w').focus();
-}
-
-async function autoTranslateRow(btn){
-  const row=btn.parentElement;
-  const wordInput=row.querySelector('.word-input-w');
-  const transInput=row.querySelector('.word-input-t');
-  const word=wordInput.value.trim();
-  if(!word){showToast(t('toast-no-word'),'error');return;}
-  const nid=document.getElementById('gNativeLang').value;
-  const tid=document.getElementById('gTargetLang').value;
-  btn.textContent='⏳';btn.disabled=true;
-  try{
-    const result=await translateWord(word,tid,nid);
-    transInput.value=result;
-  }catch(e){showToast(t('toast-translate-err'),'error');}
-  finally{btn.textContent='🔄';btn.disabled=false;}
-}
-
-function getWordsFromEditor(){
-  const words=[];const seen=new Set();
-  document.querySelectorAll('#wordsEditor .word-row').forEach(row=>{
-    const w=row.querySelector('.word-input-w').value.trim();
-    const tr=row.querySelector('.word-input-t').value.trim();
-    if(w&&tr&&!seen.has(w.toLowerCase())){seen.add(w.toLowerCase());words.push({word:w,translate:tr});}
-  });
-  return words;
-}
-
-// ============================================================
-// BULK INPUT
-// ============================================================
-let bulkParsed=[];
-function switchWordTab(tab,btn){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-content-'+tab).classList.add('active');
-}
-function parseBulkLine(line){
-  line=line.trim();if(!line)return null;
-  let sep=null;
-  if(line.includes(' - '))sep=' - ';
-  else if(line.includes(' : '))sep=' : ';
-  else if(line.includes('\t'))sep='\t';
-  else if(line.includes(' — '))sep=' — ';
-  else if(line.includes('='))sep='=';
-  if(sep){
-    const idx=line.indexOf(sep);
-    const word=line.slice(0,idx).trim();
-    const translate=line.slice(idx+sep.length).trim();
-    if(word&&translate)return{word,translate,hasTranslate:true};
-    if(word)return{word,translate:'',hasTranslate:false};
-  }
-  return{word:line,translate:'',hasTranslate:false};
-}
-function onBulkInput(){
-  const raw=document.getElementById('bulkInput').value;
-  bulkParsed=raw.split('\n').map(l=>parseBulkLine(l)).filter(Boolean);
-  renderBulkPreview();updateBulkStatus();
-}
-function renderBulkPreview(){
-  const preview=document.getElementById('bulkPreview');
-  if(!bulkParsed.length){preview.innerHTML='';return;}
-  preview.innerHTML=`
-    <div class="bulk-preview-title">${bulkParsed.length} ${t('words')}</div>
-    <div class="bulk-preview-list">
-      ${bulkParsed.map((item,i)=>`
-        <div class="bulk-preview-item ${item.hasTranslate?'has-translate':'no-translate'}" id="bpi-${i}">
-          <span class="bpi-word">${esc(item.word)}</span>
-          <span class="bpi-arrow">→</span>
-          <span class="bpi-translate ${item.hasTranslate?'done':'pending'}" id="bpi-tr-${i}">
-            ${item.hasTranslate?esc(item.translate):t('bulk-no-translate')}
-          </span>
-        </div>`).join('')}
-    </div>`;
-}
-function updateBulkStatus(){
-  const noTr=bulkParsed.filter(i=>!i.hasTranslate).length;
-  const status=document.getElementById('bulkStatus');
-  if(!bulkParsed.length){status.textContent='';return;}
-  if(noTr===0){status.textContent=`✅ ${t('bulk-status-done')}`;return;}
-  status.textContent=`⚠️ ${noTr} ${t('bulk-status-need')}`;
-}
-async function translateAllBulk(){
-  const toTranslate=bulkParsed.filter(i=>!i.hasTranslate);
-  if(!toTranslate.length){showToast(t('bulk-status-done'),'info');return;}
-  const nid=document.getElementById('gNativeLang').value;
-  const tid=document.getElementById('gTargetLang').value;
-  const btn=document.getElementById('bulkTranslateBtn');
-  btn.disabled=true;
-  const progress=document.getElementById('translateProgress');
-  const bar=document.getElementById('translateBar');
-  progress.style.display='block';
-  let done=0;
-  for(let i=0;i<bulkParsed.length;i++){
-    const item=bulkParsed[i];if(item.hasTranslate)continue;
-    const bpi=document.getElementById(`bpi-${i}`);
-    const bpiTr=document.getElementById(`bpi-tr-${i}`);
-    if(bpi)bpi.className='bulk-preview-item translating';
-    if(bpiTr){bpiTr.className='bpi-translate loading';bpiTr.textContent=t('bulk-translating');}
-    try{
-      const result=await translateWord(item.word,tid,nid);
-      item.translate=result;item.hasTranslate=true;
-      if(bpi)bpi.className='bulk-preview-item has-translate';
-      if(bpiTr){bpiTr.className='bpi-translate done';bpiTr.textContent=result;}
-    }catch(e){
-      if(bpi)bpi.className='bulk-preview-item no-translate';
-      if(bpiTr){bpiTr.className='bpi-translate pending';bpiTr.textContent=t('toast-translate-err');}
-    }
-    done++;
-    bar.style.width=Math.round((done/toTranslate.length)*100)+'%';
-  }
-  btn.disabled=false;
-  setTimeout(()=>{progress.style.display='none';bar.style.width='0%';},600);
-  updateBulkStatus();
-}
-function getWordsFromBulk(){
-  const words=[];const seen=new Set();
-  bulkParsed.forEach(item=>{
-    if(item.word&&item.translate&&!seen.has(item.word.toLowerCase())){
-      seen.add(item.word.toLowerCase());
-      words.push({word:item.word,translate:item.translate});
-    }
-  });
-  return words;
-}
-
-// ============================================================
-// GROUPS CRUD
-// ============================================================
-function renderGroups(){
-  const grid=document.getElementById('groupsGrid');
-  if(!appData.groups.length){
-    grid.innerHTML=`<div class="glass empty-state" style="grid-column:1/-1">
-      <div class="es-icon">📭</div><h3>${t('no-groups')}</h3><p>${t('no-groups-sub')}</p>
-      <button class="btn btn-primary" style="margin-top:16px" onclick="openCreateModal()">➕ ${t('btn-create')}</button>
-    </div>`;return;
-  }
-  grid.innerHTML=appData.groups.map(g=>groupCardHTML(g)).join('');
-}
-function groupCardHTML(g){
-  const nl=getLang(g.nativeLang);const tl=getLang(g.targetLang);
-  const preview=g.words.slice(0,5).map(w=>`<span class="word-chip">${esc(w.word)}</span>`).join('');
-  const more=g.words.length>5?`<span class="word-chip">+${g.words.length-5}</span>`:'';
-  const gs=appData.stats.byGroup[g.id];
-  const acc=gs&&(gs.correct+gs.wrong)>0?Math.round(gs.correct/(gs.correct+gs.wrong)*100):null;
-  return`<div class="glass group-card">
-    <div class="group-card-header">
-      <div style="flex:1;min-width:0">
-        <div class="group-title">${esc(g.name)}</div>
-        <div class="group-meta">${tl.flag} ${tl.name} → ${nl.flag} ${nl.name} · ${g.words.length} ${t('words')}</div>
-        ${g.desc?`<div style="font-size:0.77rem;color:var(--text-muted);margin-top:3px">${esc(g.desc)}</div>`:''}
+  <div class="modal-overlay" id="shareModal" hidden>
+    <section class="glass modal small-modal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle" tabindex="-1">
+      <div class="modal-header"><h2 id="shareModalTitle">Поделиться группой</h2><button type="button" class="icon-btn modal-close" data-close="shareModal" aria-label="Закрыть">✕</button></div>
+      <p id="shareDescription">Скопируйте код и отправьте другому пользователю</p>
+      <div class="share-code-box" id="shareCode" tabindex="0"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close" data-close="shareModal" id="shareCloseBtn">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="copyShareBtn">📋 Копировать</button>
       </div>
-      ${acc!==null?`<span class="badge badge-success">${acc}%</span>`:''}
-    </div>
-    <div class="word-chips">${preview}${more}</div>
-    <div class="group-actions">
-      <button class="btn btn-primary btn-sm" onclick="openStudyModal('${g.id}')">${t('btn-learn')}</button>
-      <button class="btn btn-ghost btn-sm" onclick="editGroup('${g.id}')">${t('btn-edit')}</button>
-      <button class="btn btn-ghost btn-sm" onclick="shareGroup('${g.id}')">${t('btn-share')}</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}')">🗑</button>
-    </div>
-  </div>`;
-}
-function openCreateModal(){
-  document.getElementById('groupModalTitle').textContent=t('btn-create');
-  document.getElementById('gName').value='';
-  document.getElementById('gDesc').value='';
-  document.getElementById('editGroupId').value='';
-  document.getElementById('wordsEditor').innerHTML='';
-  document.getElementById('bulkInput').value='';
-  bulkParsed=[];
-  document.getElementById('bulkPreview').innerHTML='';
-  document.getElementById('bulkStatus').textContent='';
-  populateLangSelects();
-  document.getElementById('gNativeLang').value=appData.settings.nativeLang;
-  document.getElementById('gTargetLang').value=appData.settings.targetLang;
-  switchWordTab('one-by-one',document.getElementById('tab-one'));
-  addWordRow();
-  openModal('groupModal');
-  setTimeout(()=>document.getElementById('gName').focus(),200);
-}
-function editGroup(id){
-  const g=appData.groups.find(x=>x.id===id);if(!g)return;
-  document.getElementById('groupModalTitle').textContent=t('btn-edit');
-  document.getElementById('gName').value=g.name;
-  document.getElementById('gDesc').value=g.desc||'';
-  document.getElementById('editGroupId').value=id;
-  document.getElementById('wordsEditor').innerHTML='';
-  document.getElementById('bulkInput').value='';
-  bulkParsed=[];
-  document.getElementById('bulkPreview').innerHTML='';
-  populateLangSelects();
-  document.getElementById('gNativeLang').value=g.nativeLang||appData.settings.nativeLang;
-  document.getElementById('gTargetLang').value=g.targetLang||appData.settings.targetLang;
-  switchWordTab('one-by-one',document.getElementById('tab-one'));
-  g.words.forEach(w=>addWordRow(w.word,w.translate));
-  openModal('groupModal');
-}
-function saveGroup(){
-  const name=document.getElementById('gName').value.trim();
-  if(!name){showToast(t('toast-no-name'),'error');return;}
-  const isBulk=document.getElementById('tab-content-bulk').classList.contains('active');
-  const words=isBulk?getWordsFromBulk():getWordsFromEditor();
-  if(!words.length){showToast(t('toast-no-words'),'error');return;}
-  const nativeLang=document.getElementById('gNativeLang').value;
-  const targetLang=document.getElementById('gTargetLang').value;
-  const desc=document.getElementById('gDesc').value.trim();
-  const editId=document.getElementById('editGroupId').value;
-  if(editId){
-    const i=appData.groups.findIndex(g=>g.id===editId);
-    if(i!==-1)appData.groups[i]={...appData.groups[i],name,nativeLang,targetLang,desc,words,updatedAt:Date.now()};
-    showToast(t('toast-saved'),'success');
-  }else{
-    appData.groups.push({id:'g_'+Date.now(),name,nativeLang,targetLang,desc,words,createdAt:Date.now(),updatedAt:Date.now()});
-    showToast(t('toast-created'),'success');
-  }
-  saveData();closeModal('groupModal');renderGroups();
-}
-function deleteGroup(id){
-  showConfirm(t('confirm-del-group'),t('confirm-del-group-t'),()=>{
-    appData.groups=appData.groups.filter(g=>g.id!==id);
-    delete appData.stats.byGroup[id];
-    saveData();renderGroups();showToast(t('toast-deleted'),'info');
-  });
-}
+    </section>
+  </div>
 
-// ============================================================
-// SHARE & IMPORT
-// ============================================================
-function shareGroup(id){
-  const g=appData.groups.find(x=>x.id===id);if(!g)return;
-  const exp={name:g.name,nativeLang:g.nativeLang,targetLang:g.targetLang,desc:g.desc,words:g.words};
-  document.getElementById('shareCode').textContent=btoa(unescape(encodeURIComponent(JSON.stringify(exp))));
-  openModal('shareModal');
-}
-function copyShareCode(){
-  navigator.clipboard.writeText(document.getElementById('shareCode').textContent)
-    .then(()=>showToast(t('toast-copied'),'success'));
-}
-function showImportModal(){document.getElementById('importCode').value='';openModal('importModal');}
-function importGroup(){
-  const code=document.getElementById('importCode').value.trim();
-  if(!code){showToast(t('toast-bad-import'),'error');return;}
-  try{
-    const g=JSON.parse(decodeURIComponent(escape(atob(code))));
-    if(!g.name||!g.words)throw 0;
-    appData.groups.push({id:'g_'+Date.now(),name:g.name,nativeLang:g.nativeLang||'ru',targetLang:g.targetLang||'en',desc:g.desc||'',words:g.words,createdAt:Date.now(),updatedAt:Date.now()});
-    saveData();renderGroups();closeModal('importModal');
-    showToast(`${t('toast-imported')}: «${g.name}»`,'success');
-  }catch(e){showToast(t('toast-bad-import'),'error');}
-}
+  <div class="modal-overlay" id="importModal" hidden>
+    <section class="glass modal small-modal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle" tabindex="-1">
+      <form id="importForm">
+        <div class="modal-header"><h2 id="importModalTitle">Импорт группы</h2><button type="button" class="icon-btn modal-close" data-close="importModal" aria-label="Закрыть">✕</button></div>
+        <p id="importDescription">Вставьте код группы, полученный от другого пользователя</p>
+        <div class="form-group"><label for="importCode" id="importCodeLabel">Код группы</label><textarea id="importCode" maxlength="5000000" placeholder="Вставьте код здесь..." required></textarea></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost modal-close" data-close="importModal" id="importCancelBtn">Отмена</button>
+          <button type="submit" class="btn btn-primary" id="importSubmitBtn">Импортировать</button>
+        </div>
+      </form>
+    </section>
+  </div>
 
-// ============================================================
-// STUDY
-// ============================================================
-let currentStudyGroupId=null;
-function openStudyModal(groupId){
-  currentStudyGroupId=groupId;
-  const g=appData.groups.find(x=>x.id===groupId);if(!g)return;
-  document.getElementById('studyModalGroupName').textContent=g.name;
-  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
-  document.querySelector('.mode-card[data-mode="word-to-translate"]').classList.add('selected');
-  openModal('studyModal');
-}
-function selectMode(el){
-  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-}
-let SS={group:null,mode:'word-to-translate',cards:[],idx:0,correct:0,wrong:0,skipped:0,hintLevel:0,fcFlipped:false,wrongWords:[]};
-function startStudy(){
-  const g=appData.groups.find(x=>x.id===currentStudyGroupId);if(!g)return;
-  const mode=document.querySelector('.mode-card.selected')?.dataset.mode||'word-to-translate';
-  const order=document.querySelector('[name=cardOrder]:checked')?.value||'sequential';
-  SS={group:g,mode,cards:buildCards(g.words,mode,order),idx:0,correct:0,wrong:0,skipped:0,hintLevel:0,fcFlipped:false,wrongWords:[]};
-  closeModal('studyModal');
-  openStudyFullscreen();
-  showCard();
-}
-function buildCards(words,mode,order){
-  let cards=words.map(w=>{
-    const flip=mode==='translate-to-word';
-    return{front:flip?w.translate:w.word,back:flip?w.word:w.translate,expected:flip?w.word:w.translate,original:w};
-  });
-  if(order==='random')cards=shuffle(cards);
-  return cards;
-}
-function openStudyFullscreen(){
-  const fs=document.getElementById('studyFullscreen');
-  fs.classList.add('open');
-  document.getElementById('studyGroupName').textContent=SS.group.name;
-  document.getElementById('studyResults').style.display='none';
-  const isFC=SS.mode==='flashcard',isTest=SS.mode==='test';
-  document.getElementById('writeMode').style.display=(!isFC&&!isTest)?'block':'none';
-  document.getElementById('fcMode').style.display=isFC?'block':'none';
-  document.getElementById('testMode').style.display=isTest?'block':'none';
-}
-function exitStudy(){document.getElementById('studyFullscreen').classList.remove('open');renderGroups();}
-function showCard(){
-  if(SS.idx>=SS.cards.length){endStudy();return;}
-  const card=SS.cards[SS.idx];
-  const pct=(SS.idx/SS.cards.length)*100;
-  document.getElementById('progressFill').style.width=pct+'%';
-  document.getElementById('progressText').textContent=`${SS.idx+1}/${SS.cards.length}`;
-  const isFlip=SS.mode==='translate-to-word';
-  const wl=t('card-word'),trl=t('card-translate');
-  if(SS.mode==='flashcard'){
-    document.getElementById('flashcardFC').classList.remove('flipped');
-    SS.fcFlipped=false;
-    document.getElementById('fcFrontLabel').textContent=isFlip?trl:wl;
-    document.getElementById('fcBackLabel').textContent=isFlip?wl:trl;
-    document.getElementById('fcFrontWord').textContent=card.front;
-    document.getElementById('fcBackWord').textContent=card.back;
-  }else if(SS.mode==='test'){
-    renderTestCard(card);
-  }else{
-    document.getElementById('flashcard').classList.remove('flipped');
-    document.getElementById('cardFrontLabel').textContent=isFlip?trl:wl;
-    document.getElementById('cardBackLabel').textContent=isFlip?wl:trl;
-    document.getElementById('cardFrontWord').textContent=card.front;
-    document.getElementById('cardBackWord').textContent=card.back;
-    const ai=document.getElementById('answerInput');
-    ai.value='';ai.disabled=false;
-    document.getElementById('answerFeedback').className='';
-    document.getElementById('answerFeedback').textContent='';
-    SS.hintLevel=appData.settings.autoHint?1:0;
-    renderHint();
-    setTimeout(()=>ai.focus(),80);
-  }
-}
-function handleAnswerKey(e){if(e.key==='Enter')checkAnswer();}
-function checkAnswer(){
-  const card=SS.cards[SS.idx];
-  const user=document.getElementById('answerInput').value.trim();
-  if(!user)return;
-  let exp=card.expected,ans=user;
-  if(!appData.settings.caseSensitive){exp=exp.toLowerCase();ans=ans.toLowerCase();}
-  const ok=ans===exp||(appData.settings.fuzzy&&levenshtein(ans,exp)<=1);
-  const fb=document.getElementById('answerFeedback');
-  document.getElementById('answerInput').disabled=true;
-  if(ok){
-    SS.correct++;fb.className='correct';fb.textContent='✓  '+card.expected;
-    setTimeout(nextCard,800);
-  }else{
-    SS.wrong++;SS.wrongWords.push({question:card.front,correct:card.expected,given:user});
-    fb.className='wrong';fb.textContent='✗  '+card.expected;
-    document.getElementById('flashcard').classList.add('flipped');
-    setTimeout(nextCard,1800);
-  }
-}
-function showHint(){
-  const card=SS.cards[SS.idx];if(!card)return;
-  SS.hintLevel=Math.min(SS.hintLevel+2,card.expected.length);renderHint();
-}
-function renderHint(){
-  const card=SS.cards[SS.idx];
-  const strip=document.getElementById('hintStrip');
-  if(!card||SS.hintLevel===0){strip.innerHTML='';return;}
-  strip.innerHTML=card.expected.split('').map((ch,i)=>{
-    if(ch===' ')return`<div class="hint-letter space-letter"></div>`;
-    return`<div class="hint-letter${i<SS.hintLevel?' revealed':''}">${i<SS.hintLevel?ch:'·'}</div>`;
-  }).join('');
-}
-function flipFC(){SS.fcFlipped=!SS.fcFlipped;document.getElementById('flashcardFC').classList.toggle('flipped',SS.fcFlipped);}
-function rateFC(knew){
-  if(knew)SS.correct++;
-  else{SS.wrong++;SS.wrongWords.push({question:SS.cards[SS.idx].front,correct:SS.cards[SS.idx].back});}
-  nextCard();
-}
-function renderTestCard(card){
-  const all=SS.cards.map(c=>c.expected).filter(a=>a!==card.expected);
-  const opts=shuffle([card.expected,...shuffle(all).slice(0,3)]);
-  document.getElementById('testQuestion').innerHTML=`
-    <div class="test-question">
-      <div class="test-q-word">${esc(card.front)}</div>
-      <div class="test-options">${opts.map(o=>`<button class="test-option" onclick="checkTestAnswer(this,'${esc(o)}','${esc(card.expected)}')">${esc(o)}</button>`).join('')}</div>
-    </div>`;
-}
-function checkTestAnswer(btn,chosen,correct){
-  document.querySelectorAll('.test-option').forEach(b=>{
-    b.disabled=true;
-    if(b.textContent===correct)b.classList.add('correct-ans');
-    else if(b===btn&&chosen!==correct)b.classList.add('wrong-ans');
-  });
-  if(chosen===correct)SS.correct++;
-  else{SS.wrong++;SS.wrongWords.push({question:SS.cards[SS.idx].front,correct,given:chosen});}
-  setTimeout(nextCard,900);
-}
-function skipCard(){SS.skipped++;nextCard();}
-function nextCard(){SS.idx++;document.getElementById('answerInput').disabled=false;showCard();}
-function endStudy(){
-  const gid=SS.group.id;
-  if(!appData.stats.byGroup[gid])appData.stats.byGroup[gid]={sessions:0,correct:0,wrong:0,skipped:0};
-  appData.stats.byGroup[gid].sessions++;
-  appData.stats.byGroup[gid].correct+=SS.correct;
-  appData.stats.byGroup[gid].wrong+=SS.wrong;
-  appData.stats.byGroup[gid].skipped+=SS.skipped;
-  appData.stats.sessions++;
-  appData.stats.totalCorrect+=SS.correct;
-  appData.stats.totalWrong+=SS.wrong;
-  appData.stats.totalSkipped+=SS.skipped;
-  appData.stats.sessions_log.unshift({groupId:gid,groupName:SS.group.name,mode:SS.mode,total:SS.cards.length,correct:SS.correct,wrong:SS.wrong,skipped:SS.skipped,date:Date.now()});
-  if(appData.stats.sessions_log.length>50)appData.stats.sessions_log=appData.stats.sessions_log.slice(0,50);
-  saveData();
-  document.getElementById('writeMode').style.display='none';
-  document.getElementById('fcMode').style.display='none';
-  document.getElementById('testMode').style.display='none';
-  document.getElementById('studyResults').style.display='block';
-  const total=SS.cards.length;
-  const pct=total>0?Math.round(SS.correct/total*100):0;
-  document.getElementById('resultsScore').textContent=`${SS.correct}/${total}`;
-  document.getElementById('resultsPct').textContent=`${pct}%`;
-  document.getElementById('resCorrect').textContent=SS.correct;
-  document.getElementById('resWrong').textContent=SS.wrong;
-  document.getElementById('resSkip').textContent=SS.skipped;
-  let emoji='😅',title=t('res-low');
-  if(pct>=90){emoji='🏆';title=t('res-excellent');}
-  else if(pct>=70){emoji='🎉';title=t('res-good');}
-  else if(pct>=50){emoji='💪';title=t('res-ok');}
-  document.getElementById('resultsEmoji').textContent=emoji;
-  document.getElementById('resultsTitle').textContent=title;
-  const wl=document.getElementById('wrongListWrap');
-  if(SS.wrongWords.length){
-    wl.innerHTML=`<div style="font-size:0.78rem;font-weight:700;color:var(--danger);margin-bottom:6px">${t('wrong-words-label')}</div>`+
-      SS.wrongWords.slice(0,8).map(w=>`<div class="wrong-item">${esc(w.question)} → <strong>${esc(w.correct)}</strong>${w.given?` <span style="color:var(--danger);font-size:0.74rem">(${esc(w.given)})</span>`:''}</div>`).join('');
-  }else wl.innerHTML='';
-}
-function restartStudy(){
-  const g=SS.group,m=SS.mode;if(!g){exitStudy();return;}
-  const order=document.querySelector('[name=cardOrder]:checked')?.value||'sequential';
-  SS={group:g,mode:m,cards:buildCards(g.words,m,order),idx:0,correct:0,wrong:0,skipped:0,hintLevel:0,fcFlipped:false,wrongWords:[]};
-  document.getElementById('studyResults').style.display='none';
-  const isFC=m==='flashcard',isTest=m==='test';
-  document.getElementById('writeMode').style.display=(!isFC&&!isTest)?'block':'none';
-  document.getElementById('fcMode').style.display=isFC?'block':'none';
-  document.getElementById('testMode').style.display=isTest?'block':'none';
-  showCard();
-}
+  <div class="modal-overlay" id="settingsModal" hidden>
+    <section class="glass modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle" tabindex="-1">
+      <div class="modal-header"><h2 id="settingsModalTitle">⚙️ Настройки</h2><button type="button" class="icon-btn modal-close" data-close="settingsModal" aria-label="Закрыть">✕</button></div>
+      <div class="settings-block">
+        <h3 id="appearanceTitle">Внешний вид</h3>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="darkThemeTitle">Тёмная тема</div><div class="sr-desc" id="darkThemeDesc">Переключение между тёмной и светлой темой</div></div><label class="toggle"><input type="checkbox" id="darkToggle" aria-label="Тёмная тема" checked><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
+      </div>
+      <div class="settings-block"><h3 id="siteLangTitle">Язык интерфейса</h3><div class="lang-site-grid" id="siteLangGrid"></div></div>
+      <div class="settings-block">
+        <h3 id="defaultLangsTitle">Языки по умолчанию</h3>
+        <p class="settings-note" id="defaultLangsDesc">Используются при создании новых групп</p>
+        <div class="two-col">
+          <div class="form-group no-margin"><label for="nativeLangSel" id="defaultNativeLabel">Родной язык</label><select id="nativeLangSel"></select></div>
+          <div class="form-group no-margin"><label for="targetLangSel" id="defaultTargetLabel">Изучаемый язык</label><select id="targetLangSel"></select></div>
+        </div>
+      </div>
+      <div class="settings-block">
+        <h3 id="learningSettingsTitle">Обучение</h3>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="caseSettingTitle">Учитывать регистр</div><div class="sr-desc" id="caseSettingDesc">Различать заглавные и строчные буквы</div></div><label class="toggle"><input type="checkbox" id="caseToggle" aria-label="Учитывать регистр"><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="diacriticsSettingTitle">Учитывать диакритику</div><div class="sr-desc" id="diacriticsSettingDesc">Различать é и e, ñ и n, ü и u</div></div><label class="toggle"><input type="checkbox" id="diacriticsToggle" aria-label="Учитывать диакритику" checked><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="fuzzySettingTitle">Показывать «почти верно»</div><div class="sr-desc" id="fuzzySettingDesc">Отмечать одну опечатку отдельно, не засчитывая полностью правильный ответ</div></div><label class="toggle"><input type="checkbox" id="fuzzyToggle" aria-label="Показывать почти верно"><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="autoHintSettingTitle">Показывать подсказку сразу</div><div class="sr-desc" id="autoHintSettingDesc">Автоматически показывать первые буквы слова</div></div><label class="toggle"><input type="checkbox" id="autoHintToggle" aria-label="Показывать подсказку сразу"><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
+      </div>
+      <div class="settings-block">
+        <h3 id="dataSettingsTitle">Данные</h3>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="backupTitle">Резервная копия</div><div class="sr-desc" id="backupDesc">Скачать все данные в JSON</div></div><button type="button" class="btn btn-ghost btn-sm" id="backupBtn">💾 Скачать</button></div>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title" id="restoreTitle">Восстановить данные</div><div class="sr-desc" id="restoreDesc">После проверки файла текущие данные будут заменены</div></div><label class="btn btn-ghost btn-sm file-label" id="restoreLabel"><span id="restoreLabelText">📤 Загрузить</span><input type="file" id="restoreInput" accept=".json,application/json"></label></div>
+        <div class="settings-row"><div class="sr-info"><div class="sr-title danger-text" id="deleteAllTitle">Удалить все данные</div><div class="sr-desc" id="deleteAllDesc">Безвозвратно удалит группы, статистику и настройки</div></div><button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">🗑 Удалить</button></div>
+      </div>
+      <p class="settings-note" id="translationPrivacy">Автоматический перевод отправляет введённые слова в Yandex Cloud. Остальные данные хранятся только в вашем браузере.</p>
+      <div class="settings-footer"><p id="footerText">LinguaCards v3.0 · Данные хранятся в вашем браузере</p></div>
+    </section>
+  </div>
 
-// ============================================================
-// STATS
-// ============================================================
-function renderStats(){
-  const s=appData.stats;
-  const total=s.totalCorrect+s.totalWrong;
-  const acc=total>0?Math.round(s.totalCorrect/total*100):0;
-  document.getElementById('stSessions').textContent=s.sessions;
-  document.getElementById('stCorrect').textContent=s.totalCorrect;
-  document.getElementById('stAcc').textContent=acc+'%';
-  const gbWrap=document.getElementById('groupStatsWrap');
-  const gids=Object.keys(s.byGroup);
-  if(!gids.length){gbWrap.innerHTML=`<p style="text-align:center;padding:16px 0;color:var(--text-muted)">${t('no-stats')}</p>`;return;}
-  gbWrap.innerHTML=gids.map(gid=>{
-    const g=appData.groups.find(x=>x.id===gid);
-    const gs=s.byGroup[gid];if(!gs)return'';
-    const t2=gs.correct+gs.wrong;
-    const a=t2>0?Math.round(gs.correct/t2*100):0;
-    const color=a>=70?'var(--success)':a>=40?'var(--warning)':'var(--danger)';
-    return`<div class="stat-bar-wrap">
-      <div class="stat-bar-label"><span>${g?esc(g.name):gid}</span><span style="color:${color}">${a}% · ${gs.sessions} ${t('st-sessions').toLowerCase()}</span></div>
-      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${a}%;background:${color}"></div></div>
-    </div>`;
-  }).join('');
-  const rsWrap=document.getElementById('recentSessionsWrap');
-  if(!s.sessions_log.length){rsWrap.innerHTML=`<p style="text-align:center;padding:16px 0;color:var(--text-muted)">${t('no-stats')}</p>`;return;}
-  const me={flashcard:'🃏','word-to-translate':'🔤','translate-to-word':'🔄',test:'📝'};
-  rsWrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${s.sessions_log.slice(0,10).map(sess=>{
-    const pct=sess.total>0?Math.round(sess.correct/sess.total*100):0;
-    const color=pct>=70?'var(--success)':pct>=40?'var(--warning)':'var(--danger)';
-    return`<div class="glass-sm" style="padding:12px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:1.3rem">${me[sess.mode]||'✏️'}</span>
-      <div style="flex:1"><div style="font-weight:700;font-size:0.88rem">${esc(sess.groupName)}</div>
-      <div style="font-size:0.74rem;color:var(--text-muted)">${new Date(sess.date).toLocaleDateString()}</div></div>
-      <div style="text-align:right"><div style="font-weight:900;font-size:1rem;color:${color}">${pct}%</div>
-      <div style="font-size:0.72rem;color:var(--text-muted)">${sess.correct}/${sess.total}</div></div>
-    </div>`;
-  }).join('')}</div>`;
-}
+  <div class="modal-overlay" id="confirmModal" hidden>
+    <section class="glass modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText" tabindex="-1">
+      <div class="modal-header"><h2 id="confirmTitle">Подтверждение</h2><button type="button" class="icon-btn modal-close" data-close="confirmModal" aria-label="Закрыть">✕</button></div>
+      <p id="confirmText"></p>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close" data-close="confirmModal" id="confirmCancelBtn">Отмена</button>
+        <button type="button" class="btn btn-danger" id="confirmOkBtn">Подтвердить</button>
+      </div>
+    </section>
+  </div>
 
-// ============================================================
-// BACKUP & RESTORE
-// ============================================================
-function backupData(){
-  const blob=new Blob([JSON.stringify(appData,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`linguacards_${new Date().toISOString().split('T')[0]}.json`;a.click();
-  showToast(t('toast-backup'),'success');
-}
-function restoreData(e){
-  const file=e.target.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    try{
-      const p=JSON.parse(ev.target.result);if(!p.groups)throw 0;
-      appData=Object.assign({},appData,p);
-      if(!appData.stats.byGroup)appData.stats.byGroup={};
-      if(!appData.stats.sessions_log)appData.stats.sessions_log=[];
-      saveData();applySettings();renderGroups();showToast(t('toast-restored'),'success');
-    }catch(err){showToast(t('toast-restore-fail'),'error');}
-  };
-  r.readAsText(file);e.target.value='';
-}
-function confirmDeleteAll(){
-  showConfirm(t('confirm-del-all'),t('confirm-del-all-t'),()=>{
-    localStorage.removeItem('lc3_data');
-    appData={groups:[],stats:{sessions:0,totalCorrect:0,totalWrong:0,totalSkipped:0,byGroup:{},sessions_log:[]},settings:appData.settings};
-    saveData();renderGroups();showToast(t('toast-all-del'),'info');
-  });
-}
-
-// ============================================================
-// MODALS
-// ============================================================
-function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-function showConfirm(title,text,onOk){
-  document.getElementById('confirmTitle').textContent=title;
-  document.getElementById('confirmText').textContent=text;
-  document.getElementById('confirmOkBtn').onclick=()=>{closeModal('confirmModal');onOk();};
-  openModal('confirmModal');
-}
-document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
-
-// ============================================================
-// TOAST
-// ============================================================
-function showToast(msg,type='info'){
-  const c=document.getElementById('toastWrap');
-  const d=document.createElement('div');
-  d.className=`toast ${type}`;
-  d.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'}[type]||''}</span><span>${msg}</span>`;
-  c.appendChild(d);
-  setTimeout(()=>{d.style.animation='toastOut 0.3s ease forwards';setTimeout(()=>d.remove(),300);},3000);
-}
-
-// ============================================================
-// UTILS
-// ============================================================
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-function levenshtein(a,b){
-  const m=a.length,n=b.length;
-  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));
-  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
-    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
-  return dp[m][n];
-}
-
-// ============================================================
-// KEYBOARD
-// ============================================================
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    if(document.getElementById('studyFullscreen').classList.contains('open'))return;
-    document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));
-  }
-  if(document.getElementById('studyFullscreen').classList.contains('open')){
-    if(SS.mode==='flashcard'){
-      if(e.key==='ArrowRight')rateFC(true);
-      if(e.key==='ArrowLeft')rateFC(false);
-      if(e.key===' '){e.preventDefault();flipFC();}
-    }
-  }
-});
-
-// ============================================================
-// INIT
-// ============================================================
-loadData();
-applySettings();
-showPage('groups');
-</script>
+  <div id="toastWrap" aria-live="polite" aria-atomic="false"></div>
+  <noscript><p class="noscript">Для работы LinguaCards нужен JavaScript.</p></noscript>
 </body>
 </html>

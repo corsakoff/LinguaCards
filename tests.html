@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinguaCards — тесты</title>
+  <style>
+    body { max-width: 900px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; background: #1c1c2e; color: #f0f0f5; }
+    #testSummary { padding: 16px; border-radius: 12px; background: #2a2a3e; font-weight: 700; }
+    #testSummary.passed { color: #34d399; }
+    #testSummary.failed { color: #f87171; }
+    li { margin: 8px 0; }
+    .pass { color: #34d399; }
+    .fail { color: #f87171; }
+    pre { white-space: pre-wrap; color: #fbbf24; }
+  </style>
+  <script src="core.js" defer></script>
+  <script src="tests.js" defer></script>
+</head>
+<body>
+  <h1>LinguaCards: автоматические тесты</h1>
+  <p id="testSummary">Выполняются…</p>
+  <ol id="testResults"></ol>
+</body>
+</html>
