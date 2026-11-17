@@ -119,4 +119,9 @@ beautiful
 - `translation-models.js` — проверенные модели и маршруты;
 - `translation.js` — очередь локального перевода и клиент MyMemory;
 - `translation.worker.js` — загрузка ONNX-моделей и инференс;
+- `icons.js` — локальные SVG-иконки Lucide;
 - `tests.html`, `tests.js` — браузерные автоматические тесты.
+
+## Дизайн
+
+Интерфейс доработан по методике [unslop](https://github.com/heydamir/unslop) Дамира Соколовского ([@heydamir](https://x.com/heydamir)), CC BY 4.0. Иконки — [Lucide](https://lucide.dev), ISC.

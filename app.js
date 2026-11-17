@@ -7,6 +7,7 @@
   const SITE_LANG_NAMES = { ru: 'Русский', en: 'English', de: 'Deutsch', fr: 'Français', es: 'Español' };
   const TM = globalThis.LinguaTranslationModels;
   const translator = globalThis.LinguaTranslator;
+  const I = globalThis.LinguaIcons;
   const T = {
     navGroups: ['📚 Группы', '📚 Groups', '📚 Gruppen', '📚 Groupes', '📚 Grupos'],
     navStats: ['📊 Статистика', '📊 Statistics', '📊 Statistik', '📊 Statistiques', '📊 Estadísticas'],
@@ -160,8 +161,13 @@
     sessionAttempts: ['{correct} из {total} попыток', '{correct} out of {total} attempts', '{correct} von {total} Versuchen', '{correct} sur {total} essais', '{correct} de {total} intentos'],
     languageChanged: ['Язык интерфейса изменён', 'Interface language changed', 'Sprache geändert', 'Langue modifiée', 'Idioma cambiado']
   };
+  Object.values(T).forEach(phrases => {
+    phrases.forEach((phrase, index) => {
+      phrases[index] = phrase.replace(/[\p{Extended_Pictographic}✏⬇]\uFE0F?\s*/gu, '').replace(/[!¡]/g, '');
+    });
+  });
   const I18N_IDS = {
-    navGroups: 'navGroups', navStats: 'navStats', groupsTitle: 'groupsTitle', groupsSubtitle: 'groupsSubtitle', importBtnText: 'import', createGroupBtnText: 'create', statsTitle: 'statsTitle', statsSubtitle: 'statsSubtitle', stSessionsLabel: 'sessions', stCorrectLabel: 'correct', stAlmostLabel: 'almost', stAccLabel: 'accuracy', stDueLabel: 'due', groupStatsTitle: 'byGroup', recentStatsTitle: 'recent', backBtnText: 'back', hintBtnText: 'hint', skipBtnText: 'skip', fcTapHint: 'flip', fcDunnoText: 'dunno', fcKnowText: 'know', resCorrectLabel: 'correct', resAlmostLabel: 'almost', resWrongLabel: 'mistakes', resSkipLabel: 'skipped', resultsBackText: 'back', repeatMistakesText: 'repeatMistakes', restartStudyText: 'again', studyModeLabel: 'studyMode', modeWordTitle: 'wordTranslate', modeWordDesc: 'wordTranslateDesc', modeTranslateTitle: 'translateWord', modeTranslateDesc: 'translateWordDesc', modeDictationTitle: 'dictation', modeDictationDesc: 'dictationDesc', modeFlashTitle: 'flashcards', modeFlashDesc: 'flashcardsDesc', modeTestTitle: 'test', modeTestDesc: 'testDesc', studyOrderLabel: 'order', orderSeqLabel: 'sequential', orderRndLabel: 'random', orderDueLabel: 'dueFirst', studyDueOnlyText: 'dueOnly', studyCancelBtn: 'cancel', startStudyBtn: 'start', groupNameLabel: 'groupName', groupNativeLabel: 'native', groupTargetLabel: 'target', groupDescLabel: 'description', groupWordsLabel: 'wordsTranslations', tabOneText: 'oneByOne', tabBulkText: 'bulk', addWordText: 'addWord', translateAllText: 'translateAll', groupCancelBtn: 'cancel', saveGroupBtn: 'save', shareModalTitle: 'shareTitle', shareDescription: 'shareDesc', shareCloseBtn: 'close', copyShareBtn: 'copy', importModalTitle: 'importTitle', importDescription: 'importDesc', importCodeLabel: 'importCode', importCancelBtn: 'cancel', importSubmitBtn: 'importAction', settingsModalTitle: 'settings', appearanceTitle: 'appearance', darkThemeTitle: 'dark', darkThemeDesc: 'darkDesc', siteLangTitle: 'siteLanguage', defaultLangsTitle: 'defaultLanguages', defaultLangsDesc: 'defaultLanguagesDesc', defaultNativeLabel: 'native', defaultTargetLabel: 'target', learningSettingsTitle: 'learning', caseSettingTitle: 'case', caseSettingDesc: 'caseDesc', diacriticsSettingTitle: 'diacritics', diacriticsSettingDesc: 'diacriticsDesc', fuzzySettingTitle: 'fuzzy', fuzzySettingDesc: 'fuzzyDesc', autoHintSettingTitle: 'autoHint', autoHintSettingDesc: 'autoHintDesc', dataSettingsTitle: 'data', backupTitle: 'backup', backupDesc: 'backupDesc', backupBtn: 'download', restoreTitle: 'restore', restoreDesc: 'restoreDesc', restoreLabelText: 'upload', deleteAllTitle: 'deleteAll', deleteAllDesc: 'deleteAllDesc', deleteAllBtn: 'delete', translationPrivacy: 'privacy', footerText: 'footer', confirmTitle: 'confirm', confirmCancelBtn: 'cancel', confirmOkBtn: 'confirmAction'
+    navGroups: 'navGroups', navStats: 'navStats', navSettings: 'settings', groupsTitle: 'groupsTitle', groupsSubtitle: 'groupsSubtitle', importBtnText: 'import', createGroupBtnText: 'create', statsTitle: 'statsTitle', statsSubtitle: 'statsSubtitle', stSessionsLabel: 'sessions', stCorrectLabel: 'correct', stAlmostLabel: 'almost', stAccLabel: 'accuracy', stDueLabel: 'due', groupStatsTitle: 'byGroup', recentStatsTitle: 'recent', backBtnText: 'back', hintBtnText: 'hint', skipBtnText: 'skip', fcTapHint: 'flip', fcDunnoText: 'dunno', fcKnowText: 'know', resCorrectLabel: 'correct', resAlmostLabel: 'almost', resWrongLabel: 'mistakes', resSkipLabel: 'skipped', resultsBackText: 'back', repeatMistakesText: 'repeatMistakes', restartStudyText: 'again', studyModeLabel: 'studyMode', modeWordTitle: 'wordTranslate', modeWordDesc: 'wordTranslateDesc', modeTranslateTitle: 'translateWord', modeTranslateDesc: 'translateWordDesc', modeDictationTitle: 'dictation', modeDictationDesc: 'dictationDesc', modeFlashTitle: 'flashcards', modeFlashDesc: 'flashcardsDesc', modeTestTitle: 'test', modeTestDesc: 'testDesc', studyOrderLabel: 'order', orderSeqLabel: 'sequential', orderRndLabel: 'random', orderDueLabel: 'dueFirst', studyDueOnlyText: 'dueOnly', studyCancelBtn: 'cancel', startStudyBtn: 'start', groupNameLabel: 'groupName', groupNativeLabel: 'native', groupTargetLabel: 'target', groupDescLabel: 'description', groupWordsLabel: 'wordsTranslations', tabOneText: 'oneByOne', tabBulkText: 'bulk', addWordText: 'addWord', translateAllText: 'translateAll', groupCancelBtn: 'cancel', saveGroupBtn: 'save', shareModalTitle: 'shareTitle', shareDescription: 'shareDesc', shareCloseBtn: 'close', copyShareBtn: 'copy', importModalTitle: 'importTitle', importDescription: 'importDesc', importCodeLabel: 'importCode', importCancelBtn: 'cancel', importSubmitBtn: 'importAction', settingsTitle: 'settings', appearanceTitle: 'appearance', darkThemeTitle: 'dark', darkThemeDesc: 'darkDesc', siteLangTitle: 'siteLanguage', defaultLangsTitle: 'defaultLanguages', defaultLangsDesc: 'defaultLanguagesDesc', defaultNativeLabel: 'native', defaultTargetLabel: 'target', learningSettingsTitle: 'learning', caseSettingTitle: 'case', caseSettingDesc: 'caseDesc', diacriticsSettingTitle: 'diacritics', diacriticsSettingDesc: 'diacriticsDesc', fuzzySettingTitle: 'fuzzy', fuzzySettingDesc: 'fuzzyDesc', autoHintSettingTitle: 'autoHint', autoHintSettingDesc: 'autoHintDesc', dataSettingsTitle: 'data', backupTitle: 'backup', backupDesc: 'backupDesc', backupBtn: 'download', restoreTitle: 'restore', restoreDesc: 'restoreDesc', restoreLabelText: 'upload', deleteAllTitle: 'deleteAll', deleteAllDesc: 'deleteAllDesc', deleteAllBtn: 'delete', translationPrivacy: 'privacy', footerText: 'footer', confirmTitle: 'confirm', confirmCancelBtn: 'cancel', confirmOkBtn: 'confirmAction'
   };
 
   let appData = C.createDefaultData();
@@ -219,8 +225,8 @@
   }
   function applySettings() {
     document.body.className = appData.settings.darkMode ? 'dark' : 'light';
-    document.querySelector('meta[name="theme-color"]').content = appData.settings.darkMode ? '#1c1c2e' : '#e8e8f4';
-    $('themeBtn').textContent = appData.settings.darkMode ? '🌙' : '☀️';
+    document.querySelector('meta[name="theme-color"]').content = appData.settings.darkMode ? '#0b0d14' : '#f5f7fa';
+    $('themeBtn').innerHTML = I.icon(appData.settings.darkMode ? 'moon' : 'sun');
     for (const [id, key] of [['darkToggle', 'darkMode'], ['caseToggle', 'caseSensitive'], ['diacriticsToggle', 'diacriticsSensitive'], ['fuzzyToggle', 'fuzzy'], ['autoHintToggle', 'autoHint']]) $(id).checked = appData.settings[key];
     $('translationProvider').value = appData.settings.translationProvider;
     populateLangSelects();
@@ -243,7 +249,7 @@
     applySettings(); saveData(); renderGroups();
   }
   function populateLangSelects() {
-    const options = C.STUDY_LANGS.map(lang => `<option value="${lang.id}">${lang.flag} ${esc(lang.name)}</option>`).join('');
+    const options = C.STUDY_LANGS.map(lang => `<option value="${lang.id}">${lang.id.toUpperCase()} · ${esc(lang.name)}</option>`).join('');
     for (const id of ['nativeLangSel', 'targetLangSel', 'gNativeLang', 'gTargetLang', 'onbNativeLang', 'onbTargetLang']) {
       const select = $(id); const previous = select.value; select.innerHTML = options; if (previous) select.value = previous;
     }
@@ -350,7 +356,7 @@
       return false;
     } finally {
       modelOperation = false;
-      if (!$('settingsModal').hidden) {
+      if ($('page-settings').classList.contains('active')) {
         if (succeeded) renderTranslationSettings();
         else $('preloadModelBtn').disabled = false;
       }
@@ -400,7 +406,7 @@
       const active = button.dataset.page === id; button.classList.toggle('active', active);
       if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
     });
-    if (id === 'groups') renderGroups(); if (id === 'stats') renderStats();
+    if (id === 'groups') renderGroups(); if (id === 'stats') renderStats(); if (id === 'settings') renderTranslationSettings();
   }
   function openModal(id) {
     const modal = $(id); modalFocus.set(modal, document.activeElement); modal.hidden = false; syncModalState();
@@ -421,8 +427,7 @@
   function showConfirm(title, message, action) { $('confirmTitle').textContent = title; $('confirmText').textContent = message; confirmAction = action; openModal('confirmModal'); }
   function showToast(message, type = 'info', duration = 3500) {
     const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    const icon = document.createElement('span'); icon.textContent = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' }[type] || 'ℹ️';
-    const text = document.createElement('span'); text.textContent = String(message); toast.append(icon, text); $('toastWrap').appendChild(toast);
+    const text = document.createElement('span'); text.textContent = String(message); toast.appendChild(text); $('toastWrap').appendChild(toast);
     setTimeout(() => { toast.style.animation = 'toastOut .25s ease forwards'; setTimeout(() => toast.remove(), 250); }, duration);
   }
 
@@ -432,7 +437,7 @@
   function renderGroups() {
     const grid = $('groupsGrid');
     if (!appData.groups.length) {
-      grid.innerHTML = `<div class="glass empty-state"><div class="es-icon">📭</div><h2>${esc(t('noGroups'))}</h2><p>${esc(t('noGroupsDesc'))}</p><div class="empty-actions"><button type="button" class="btn btn-primary" data-action="create">➕ ${esc(t('create'))}</button><button type="button" class="btn btn-ghost" data-action="sample">🌍 ${esc(t('addSample'))}</button></div></div>`;
+      grid.innerHTML = `<div class="glass empty-state"><div class="es-icon">${I.icon('book')}</div><h2>${esc(t('noGroups'))}</h2><p>${esc(t('noGroupsDesc'))}</p><div class="empty-actions"><button type="button" class="btn btn-primary" data-action="create">${I.icon('plus')}${esc(t('create'))}</button><button type="button" class="btn btn-ghost" data-action="sample">${esc(t('addSample'))}</button></div></div>`;
       return;
     }
     const now = Date.now();
@@ -442,7 +447,7 @@
       const more = group.words.length > 5 ? `<span class="word-chip">+${group.words.length - 5}</span>` : '';
       const accuracy = C.calculateAccuracy(groupStats(group.id));
       const learning = C.getGroupLearning(group, now);
-      return `<article class="glass group-card"><div class="group-card-header"><div class="group-card-heading"><h2 class="group-title">${esc(group.name)}</h2><div class="group-meta">${target.flag} ${esc(target.name)} → ${native.flag} ${esc(native.name)} · ${group.words.length} ${esc(t('words'))}</div>${group.desc ? `<div class="group-desc">${esc(group.desc)}</div>` : ''}</div><span class="badge badge-success" title="${esc(t('accuracy'))}">${accuracy}%</span></div><div class="word-chips">${preview}${more}</div><div class="learning-meta"><span><strong>${learning.learned}/${group.words.length}</strong> ${esc(t('learned'))}</span><span><strong>${learning.due}</strong> ${esc(t('due').toLocaleLowerCase())}</span><span><strong>${learning.difficult}</strong> ${esc(t('difficult'))}</span></div><div class="group-actions"><button type="button" class="btn btn-primary btn-sm" data-action="study" data-id="${group.id}">${esc(t('study'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit" data-id="${group.id}">${esc(t('edit'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="share" data-id="${group.id}">🔗 ${esc(t('share'))}</button><button type="button" class="btn btn-danger btn-sm" data-action="delete" data-id="${group.id}" aria-label="${esc(t('delete'))}: ${esc(group.name)}">🗑</button></div></article>`;
+      return `<article class="glass group-card"><div class="group-card-header"><div class="group-card-heading"><h2 class="group-title">${esc(group.name)}</h2><div class="group-meta">${target.id.toUpperCase()} · ${esc(target.name)} → ${native.id.toUpperCase()} · ${esc(native.name)} · ${group.words.length} ${esc(t('words'))}</div>${group.desc ? `<div class="group-desc">${esc(group.desc)}</div>` : ''}</div><span class="badge badge-success" title="${esc(t('accuracy'))}">${accuracy}%</span></div><div class="word-chips">${preview}${more}</div><div class="learning-meta"><span><strong>${learning.learned}/${group.words.length}</strong> ${esc(t('learned'))}</span><span><strong>${learning.due}</strong> ${esc(t('due').toLocaleLowerCase())}</span><span><strong>${learning.difficult}</strong> ${esc(t('difficult'))}</span></div><div class="group-actions"><button type="button" class="btn btn-primary btn-sm" data-action="study" data-id="${group.id}">${I.icon('play')}${esc(t('study'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit" data-id="${group.id}">${I.icon('pencil')}${esc(t('edit'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="share" data-id="${group.id}">${I.icon('link')}${esc(t('share'))}</button><button type="button" class="btn btn-danger btn-sm" data-action="delete" data-id="${group.id}" aria-label="${esc(t('delete'))}: ${esc(group.name)}">${I.icon('trash')}</button></div></article>`;
     }).join('');
   }
   function addSampleGroup() {
@@ -471,7 +476,7 @@
   function addWordRow(word = null) {
     const source = word || { id: C.uid('w'), word: '', translate: '', acceptedAnswers: [], alternateWords: [], example: '', grammar: '', correct: 0, almost: 0, wrong: 0, skipped: 0, streak: 0, level: 0, due: 0, lastSeen: 0, lastResult: '' };
     const row = document.createElement('div'); row.className = 'word-row'; row._word = source;
-    row.innerHTML = `<div class="word-row-main"><div class="word-field"><label class="word-label-w"></label><input class="word-input-w" type="text" maxlength="1000" autocomplete="off" dir="auto"></div><div class="lang-sep" aria-hidden="true">→</div><div class="word-field"><label class="word-label-t"></label><input class="word-input-t" type="text" maxlength="1000" autocomplete="off" dir="auto"></div><div class="word-row-actions"><button type="button" class="icon-btn translate-btn" data-row-action="translate" title="${esc(t('translate'))}" aria-label="${esc(t('translate'))}">🔄</button><button type="button" class="remove-word-btn" data-row-action="remove" title="${esc(t('remove'))}" aria-label="${esc(t('remove'))}">✕</button></div></div><details class="word-details"><summary>${esc(t('details'))}</summary><div class="word-details-grid"><div><label>${esc(t('otherTranslations'))}<input class="word-accepted" type="text" maxlength="5000"></label></div><div><label>${esc(t('otherWords'))}<input class="word-alternate" type="text" maxlength="5000"></label></div><div class="wide"><label>${esc(t('example'))}<textarea class="word-example" rows="2" maxlength="5000" dir="auto"></textarea></label></div><div class="wide"><label>${esc(t('grammar'))}<input class="word-grammar" type="text" maxlength="1000"></label></div></div></details>`;
+    row.innerHTML = `<div class="word-row-main"><div class="word-field"><label class="word-label-w"></label><input class="word-input-w" type="text" maxlength="1000" autocomplete="off" dir="auto"></div><div class="lang-sep" aria-hidden="true">→</div><div class="word-field"><label class="word-label-t"></label><input class="word-input-t" type="text" maxlength="1000" autocomplete="off" dir="auto"></div><div class="word-row-actions"><button type="button" class="icon-btn translate-btn" data-row-action="translate" title="${esc(t('translate'))}" aria-label="${esc(t('translate'))}">${I.icon('arrows')}</button><button type="button" class="remove-word-btn" data-row-action="remove" title="${esc(t('remove'))}" aria-label="${esc(t('remove'))}">${I.icon('x')}</button></div></div><details class="word-details"><summary>${esc(t('details'))}</summary><div class="word-details-grid"><div><label>${esc(t('otherTranslations'))}<input class="word-accepted" type="text" maxlength="5000"></label></div><div><label>${esc(t('otherWords'))}<input class="word-alternate" type="text" maxlength="5000"></label></div><div class="wide"><label>${esc(t('example'))}<textarea class="word-example" rows="2" maxlength="5000" dir="auto"></textarea></label></div><div class="wide"><label>${esc(t('grammar'))}<input class="word-grammar" type="text" maxlength="1000"></label></div></div></details>`;
     row.querySelector('.word-input-w').value = source.word || ''; row.querySelector('.word-input-t').value = source.translate || '';
     row.querySelector('.word-accepted').value = (source.acceptedAnswers || []).filter(item => item !== source.translate).join('; ');
     row.querySelector('.word-alternate').value = (source.alternateWords || []).join('; '); row.querySelector('.word-example').value = source.example || ''; row.querySelector('.word-grammar').value = source.grammar || '';
@@ -482,7 +487,7 @@
   function updateWordRowLabels() {
     const native = C.getLang($('gNativeLang').value || appData.settings.nativeLang), target = C.getLang($('gTargetLang').value || appData.settings.targetLang);
     document.querySelectorAll('#wordsEditor .word-row').forEach(row => {
-      row.querySelector('.word-label-w').textContent = `${target.flag} ${target.name}`; row.querySelector('.word-label-t').textContent = `${native.flag} ${native.name}`;
+      row.querySelector('.word-label-w').textContent = `${target.id.toUpperCase()} · ${target.name}`; row.querySelector('.word-label-t').textContent = `${native.id.toUpperCase()} · ${native.name}`;
       row.querySelector('.word-input-w').setAttribute('aria-label', `${t('word')}: ${target.name}`); row.querySelector('.word-input-t').setAttribute('aria-label', `${t('translation')}: ${native.name}`);
     });
   }
@@ -526,7 +531,7 @@
   function onBulkInput() { bulkParsed = C.parseBulk($('bulkInput').value); renderBulkPreview(); }
   function renderBulkPreview() {
     const preview = $('bulkPreview'), noTranslation = bulkParsed.filter(item => !item.hasTranslate).length;
-    $('bulkStatus').textContent = bulkParsed.length ? noTranslation ? `⚠️ ${noTranslation} ${t('withoutTranslation')}` : `✅ ${t('allTranslated')}` : '';
+    $('bulkStatus').textContent = bulkParsed.length ? noTranslation ? `${noTranslation} ${t('withoutTranslation')}` : t('allTranslated') : '';
     if (!bulkParsed.length) { preview.replaceChildren(); return; }
     preview.innerHTML = `<div class="bulk-preview-title">${bulkParsed.length} ${esc(t('words'))}</div><div class="bulk-preview-list">${bulkParsed.map((item, index) => `<div class="bulk-preview-item ${item.hasTranslate ? 'has-translate' : 'no-translate'}" id="bpi-${index}"><span class="bpi-word" dir="auto">${esc(item.word)}</span><span aria-hidden="true">→</span><span class="bpi-translate ${item.hasTranslate ? 'done' : 'pending'}" id="bpi-tr-${index}" dir="auto">${item.hasTranslate ? esc(item.translate) : esc(t('withoutTranslation'))}</span></div>`).join('')}</div>`;
   }
@@ -577,7 +582,7 @@
     if (!word) { showToast(t('noWord'), 'error'); return; }
     if (bulkAbort) { showToast(t('translationRunning'), 'warning'); return; }
     const controller = new AbortController(); bulkAbort = controller;
-    button.disabled = true; button.textContent = '⏳'; $('saveGroupBtn').disabled = true; $('bulkTranslateBtn').disabled = true;
+    button.disabled = true; button.textContent = '…'; $('saveGroupBtn').disabled = true; $('bulkTranslateBtn').disabled = true;
     try {
       const result = await translateTexts([word], $('gTargetLang').value, $('gNativeLang').value, {
         onModelProgress: event => { button.title = event.progress?.file ? `Загрузка ${event.progress.file}` : 'Подготовка локальной модели…'; }
@@ -587,7 +592,7 @@
     finally {
       if (bulkAbort === controller) bulkAbort = null;
       button.disabled = appData.settings.translationProvider === 'manual';
-      button.textContent = '🔄'; button.title = t('translate'); $('saveGroupBtn').disabled = false;
+      button.innerHTML = I.icon('arrows'); button.title = t('translate'); $('saveGroupBtn').disabled = false;
       updateGroupTranslationNote();
     }
   }
@@ -713,7 +718,9 @@
     SS.answered = false;
     const card = SS.cards[SS.idx], percent = SS.cards.length ? SS.idx / SS.cards.length * 100 : 0;
     $('progressFill').style.width = `${percent}%`; $('studyProgress').setAttribute('aria-valuenow', String(Math.round(percent))); $('progressText').textContent = `${SS.idx + 1}/${SS.cards.length}`;
-    const reverse = SS.mode === 'translate-to-word' || SS.mode === 'dictation', wordLabel = reverse ? t('translation') : t('word'), translationLabel = reverse ? t('word') : t('translation');
+    const reverse = SS.mode === 'translate-to-word' || SS.mode === 'dictation';
+    const frontLang = reverse ? SS.group.nativeLang : SS.group.targetLang, backLang = reverse ? SS.group.targetLang : SS.group.nativeLang;
+    const wordLabel = `${reverse ? t('translation') : t('word')} · ${frontLang.toUpperCase()}`, translationLabel = `${reverse ? t('word') : t('translation')} · ${backLang.toUpperCase()}`;
     if (SS.mode === 'flashcard') {
       $('flashcardFC').classList.remove('flipped'); SS.fcFlipped = false; $('fcFrontLabel').textContent = wordLabel; $('fcBackLabel').textContent = translationLabel; setCardText('fcFrontWord', 'fcBackWord', card);
       $('fcFrontExtra').textContent = cardExtra(card); $('fcBackExtra').textContent = cardExtra(card, true); setFlashcardControls(false);
@@ -808,9 +815,9 @@
     $('progressFill').style.width = '100%'; $('studyProgress').setAttribute('aria-valuenow', '100'); const percent = C.calculateAccuracy(SS);
     $('resultsScore').textContent = `${SS.correct}/${total}`; $('resultsScore').setAttribute('aria-label', t('sessionAttempts', { correct: SS.correct, total })); $('resultsPct').textContent = `${percent}%`;
     $('resCorrect').textContent = SS.correct; $('resAlmost').textContent = SS.almost; $('resWrong').textContent = SS.wrong; $('resSkip').textContent = SS.skipped;
-    let emoji = '😅', title = t('low');
-    if (percent >= 90) { emoji = '🏆'; title = t('excellent'); } else if (percent >= 70) { emoji = '🎉'; title = t('good'); } else if (percent >= 50) { emoji = '💪'; title = t('ok'); }
-    $('resultsEmoji').textContent = emoji; $('resultsTitle').textContent = title;
+    let title = t('low');
+    if (percent >= 90) title = t('excellent'); else if (percent >= 70) title = t('good'); else if (percent >= 50) title = t('ok');
+    $('resultsTitle').textContent = title;
     const wrongList = $('wrongListWrap'); wrongList.replaceChildren();
     if (SS.wrongWords.length) {
       const heading = document.createElement('div'); heading.className = 'wrong-list-title'; heading.textContent = t('wrongWords'); wrongList.appendChild(heading);
@@ -838,10 +845,10 @@
     }).join('');
     const recentWrap = $('recentSessionsWrap');
     if (!stats.sessions_log.length) { recentWrap.innerHTML = `<p class="empty-note">${esc(t('noStats'))}</p>`; return; }
-    const icons = { flashcard: '🃏', 'word-to-translate': '🔤', 'translate-to-word': '🔄', dictation: '✍️', test: '📝' };
+    const icons = { flashcard: 'layers', 'word-to-translate': 'arrowRight', 'translate-to-word': 'arrows', dictation: 'pen', test: 'list' };
     recentWrap.innerHTML = `<div class="recent-list">${stats.sessions_log.slice(0, 10).map(session => {
       const percent = C.calculateAccuracy(session), color = accuracyColor(percent);
-      return `<div class="glass-sm recent-session"><span class="recent-icon">${icons[session.mode] || '✏️'}</span><div class="recent-main"><div class="recent-title">${esc(session.groupName)}</div><div class="recent-date">${esc(new Date(session.date).toLocaleDateString(appData.settings.siteLang))}</div></div><div class="recent-result"><div class="recent-pct" style="color:${color}">${percent}%</div><div class="recent-count">${session.correct}/${session.total}</div></div></div>`;
+      return `<div class="glass-sm recent-session"><span class="recent-icon">${I.icon(icons[session.mode] || 'book')}</span><div class="recent-main"><div class="recent-title">${esc(session.groupName)}</div><div class="recent-date">${esc(new Date(session.date).toLocaleDateString(appData.settings.siteLang))}</div></div><div class="recent-result"><div class="recent-pct" style="color:${color}">${percent}%</div><div class="recent-count">${session.correct}/${session.total}</div></div></div>`;
     }).join('')}</div>`;
   }
   function trapFocus(event, modal) {
@@ -854,7 +861,6 @@
   function bindEvents() {
     document.querySelectorAll('.nav-btn').forEach(button => button.addEventListener('click', () => showPage(button.dataset.page)));
     $('themeBtn').addEventListener('click', () => { appData.settings.darkMode = !appData.settings.darkMode; applySettings(); saveData(); });
-    $('settingsBtn').addEventListener('click', () => { applySettings(); openModal('settingsModal'); });
     $('createGroupBtn').addEventListener('click', openCreateModal);
     $('importBtn').addEventListener('click', () => { $('importForm').reset(); openModal('importModal'); });
     $('groupForm').addEventListener('submit', saveGroup); $('importForm').addEventListener('submit', importGroup); $('addWordBtn').addEventListener('click', () => addWordRow());
@@ -903,7 +909,7 @@
       }
     });
   }
-  loadData(); bindEvents(); applySettings(); showPage('groups');
+  loadData(); bindEvents(); applySettings(); showPage('groups'); I.hydrate();
   if (!appData.settings.onboardingCompleted) setTimeout(openOnboarding, 100);
   if (loadWarning) setTimeout(() => showToast(t('loadError'), 'warning', 8000), 100);
 })();
