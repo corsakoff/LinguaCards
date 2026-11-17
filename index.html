@@ -8,6 +8,8 @@
   <title>LinguaCards</title>
   <link rel="stylesheet" href="styles.css">
   <script src="core.js" defer></script>
+  <script src="translation-models.js" defer></script>
+  <script src="translation.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="dark">
@@ -186,6 +188,7 @@
         <div class="form-group"><label for="gDesc" id="groupDescLabel">Описание (необязательно)</label><input type="text" id="gDesc" maxlength="2000" placeholder="Краткое описание"></div>
         <div class="form-group">
           <span class="field-label" id="groupWordsLabel">Слова и переводы</span>
+          <div id="groupTranslationNote" class="provider-note"></div>
           <div class="tab-switcher" role="tablist" aria-labelledby="groupWordsLabel">
             <button type="button" class="tab-btn active" id="tab-one" role="tab" aria-selected="true" aria-controls="tab-content-one-by-one">➕ <span id="tabOneText">По одному</span></button>
             <button type="button" class="tab-btn" id="tab-bulk" role="tab" aria-selected="false" aria-controls="tab-content-bulk">📋 <span id="tabBulkText">Списком</span></button>
@@ -241,6 +244,26 @@
     </section>
   </div>
 
+  <div class="modal-overlay" id="onboardingModal" hidden>
+    <section class="glass modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" tabindex="-1">
+      <div class="modal-header"><h2 id="onboardingTitle">Настройка языков и перевода</h2></div>
+      <p class="settings-note" id="onboardingDescription">Выберите языки по умолчанию. Позже их можно изменить для каждой группы отдельно.</p>
+      <div class="two-col form-group">
+        <div><label for="onbNativeLang" id="onbNativeLabel">Родной язык</label><select id="onbNativeLang"></select></div>
+        <div><label for="onbTargetLang" id="onbTargetLabel">Изучаемый язык</label><select id="onbTargetLang"></select></div>
+      </div>
+      <span class="field-label" id="onbProviderLabel">Автоматический перевод</span>
+      <div class="provider-options" role="group" aria-labelledby="onbProviderLabel">
+        <button type="button" class="provider-option selected" data-onb-provider="local" aria-pressed="true"><strong>На устройстве</strong><span>Приватно и без лимита запросов, но требует скачивания модели и больше ресурсов.</span></button>
+        <button type="button" class="provider-option" data-onb-provider="mymemory" aria-pressed="false"><strong>MyMemory</strong><span>Онлайн, анонимный лимит 5000 символов в день. Качество нестабильное.</span></button>
+        <button type="button" class="provider-option" data-onb-provider="manual" aria-pressed="false"><strong>Ручной ввод</strong><span>Без загрузок, сторонних запросов и автоматического перевода.</span></button>
+      </div>
+      <div class="model-status" id="onbModelInfo" role="status"></div>
+      <div class="model-progress" id="onbProgress" hidden><div id="onbProgressBar"></div></div>
+      <div class="modal-footer onboarding-footer"><button type="button" class="btn btn-ghost" id="onbSkipBtn">Продолжить без автоперевода</button><button type="button" class="btn btn-primary" id="onbSaveBtn">Сохранить и скачать модель</button></div>
+    </section>
+  </div>
+
   <div class="modal-overlay" id="settingsModal" hidden>
     <section class="glass modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle" tabindex="-1">
       <div class="modal-header"><h2 id="settingsModalTitle">⚙️ Настройки</h2><button type="button" class="icon-btn modal-close" data-close="settingsModal" aria-label="Закрыть">✕</button></div>
@@ -257,6 +280,21 @@
           <div class="form-group no-margin"><label for="targetLangSel" id="defaultTargetLabel">Изучаемый язык</label><select id="targetLangSel"></select></div>
         </div>
       </div>
+      <div class="settings-block" id="translationSettingsBlock">
+        <h3 id="translationSettingsTitle">Перевод</h3>
+        <div class="form-group"><label for="translationProvider" id="translationProviderLabel">Способ автоматического перевода</label><select id="translationProvider"><option value="local">На устройстве — лучше приватность</option><option value="mymemory">MyMemory — онлайн, качество ниже</option><option value="manual">Только ручной ввод</option></select></div>
+        <div id="localProviderSettings">
+          <p class="settings-note" id="localProviderDescription">Перевод выполняется на устройстве. Модель скачивается отдельно для языкового направления и может занимать более 100 МБ.</p>
+          <div class="model-status" id="localModelStatus" role="status">Модель будет скачана при первом переводе.</div>
+          <div class="model-progress" id="localModelProgress" hidden><div id="localModelProgressBar"></div></div>
+          <div class="settings-actions"><button type="button" class="btn btn-ghost btn-sm" id="preloadModelBtn">⬇ Скачать модель</button><button type="button" class="btn btn-ghost btn-sm" id="clearModelsBtn">🗑 Удалить модели</button></div>
+        </div>
+        <div id="myMemoryProviderSettings" hidden>
+          <p class="settings-note warning-note" id="myMemoryWarning">MyMemory может возвращать неточный перевод. Всегда проверяйте результат. Текст отправляется на сторонний сервер.</p>
+          <div class="quota-line"><span id="myMemoryQuotaText">Оценка остатка: 5000 из 5000 символов</span><progress id="myMemoryQuotaBar" max="5000" value="5000"></progress></div>
+          <p class="settings-note" id="myMemoryQuotaNote">Это локальная оценка для анонимного лимита 5000 символов в день. MyMemory не сообщает точный остаток; лимит может быть общим для вашего IP.</p>
+        </div>
+      </div>
       <div class="settings-block">
         <h3 id="learningSettingsTitle">Обучение</h3>
         <div class="settings-row"><div class="sr-info"><div class="sr-title" id="caseSettingTitle">Учитывать регистр</div><div class="sr-desc" id="caseSettingDesc">Различать заглавные и строчные буквы</div></div><label class="toggle"><input type="checkbox" id="caseToggle" aria-label="Учитывать регистр"><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
@@ -270,7 +308,7 @@
         <div class="settings-row"><div class="sr-info"><div class="sr-title" id="restoreTitle">Восстановить данные</div><div class="sr-desc" id="restoreDesc">После проверки файла текущие данные будут заменены</div></div><label class="btn btn-ghost btn-sm file-label" id="restoreLabel"><span id="restoreLabelText">📤 Загрузить</span><input type="file" id="restoreInput" accept=".json,application/json"></label></div>
         <div class="settings-row"><div class="sr-info"><div class="sr-title danger-text" id="deleteAllTitle">Удалить все данные</div><div class="sr-desc" id="deleteAllDesc">Безвозвратно удалит группы, статистику и настройки</div></div><button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">🗑 Удалить</button></div>
       </div>
-      <p class="settings-note" id="translationPrivacy">Автоматический перевод отправляет введённые слова в Yandex Cloud. Остальные данные хранятся только в вашем браузере.</p>
+      <p class="settings-note" id="translationPrivacy">Локальный перевод не отправляет текст на сервер. MyMemory отправляет текст только при явном использовании этого режима. Группы и статистика хранятся в вашем браузере.</p>
       <div class="settings-footer"><p id="footerText">LinguaCards v3.0 · Данные хранятся в вашем браузере</p></div>
     </section>
   </div>

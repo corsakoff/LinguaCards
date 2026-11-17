@@ -28,7 +28,11 @@
     fuzzy: false,
     autoHint: false,
     nativeLang: 'ru',
-    targetLang: 'en'
+    targetLang: 'en',
+    translationProvider: 'local',
+    onboardingCompleted: false,
+    myMemoryDate: '',
+    myMemoryUsed: 0
   };
   const REVIEW_DAYS = [0, 1, 2, 4, 7, 16];
 
@@ -239,14 +243,39 @@
     }
     const sourceSettings = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
     const settings = { ...DEFAULT_SETTINGS };
-    for (const key of ['darkMode', 'caseSensitive', 'diacriticsSensitive', 'fuzzy', 'autoHint']) {
+    for (const key of ['darkMode', 'caseSensitive', 'diacriticsSensitive', 'fuzzy', 'autoHint', 'onboardingCompleted']) {
       if (typeof sourceSettings[key] === 'boolean') settings[key] = sourceSettings[key];
     }
     const languageIds = new Set(STUDY_LANGS.map(lang => lang.id));
     if (languageIds.has(sourceSettings.nativeLang)) settings.nativeLang = sourceSettings.nativeLang;
     if (languageIds.has(sourceSettings.targetLang)) settings.targetLang = sourceSettings.targetLang;
     if (['ru', 'en', 'de', 'fr', 'es'].includes(sourceSettings.siteLang)) settings.siteLang = sourceSettings.siteLang;
+    if (['local', 'mymemory', 'manual'].includes(sourceSettings.translationProvider)) settings.translationProvider = sourceSettings.translationProvider;
+    if (typeof sourceSettings.myMemoryDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(sourceSettings.myMemoryDate)) settings.myMemoryDate = sourceSettings.myMemoryDate;
+    settings.myMemoryUsed = Math.min(5000, integer(sourceSettings.myMemoryUsed));
     return { version: DATA_VERSION, groups, stats, settings };
+  }
+
+  const MYMEMORY_DAILY_LIMIT = 5000;
+
+  function localDay(timestamp = Date.now()) {
+    const date = new Date(timestamp);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  function getMyMemoryUsage(settings, timestamp = Date.now()) {
+    const today = localDay(timestamp);
+    const used = settings.myMemoryDate === today ? Math.min(MYMEMORY_DAILY_LIMIT, integer(settings.myMemoryUsed)) : 0;
+    return { date: today, used, remaining: MYMEMORY_DAILY_LIMIT - used, limit: MYMEMORY_DAILY_LIMIT };
+  }
+
+  function recordMyMemoryUsage(settings, value, quotaFinished = false, timestamp = Date.now()) {
+    const usage = getMyMemoryUsage(settings, timestamp);
+    settings.myMemoryDate = usage.date;
+    settings.myMemoryUsed = quotaFinished ? usage.limit : Math.min(usage.limit, usage.used + [...String(value)].length);
+    return getMyMemoryUsage(settings, timestamp);
   }
 
   function getLang(id) {
@@ -451,6 +480,10 @@
     normalizeWord,
     normalizeGroup,
     normalizeAppData,
+    MYMEMORY_DAILY_LIMIT,
+    localDay,
+    getMyMemoryUsage,
+    recordMyMemoryUsage,
     getLang,
     parseBulkLine,
     parseBulk,

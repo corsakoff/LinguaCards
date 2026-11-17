@@ -92,6 +92,36 @@
     assert(options.includes('не'));
     equal(cards[0].original.word, "don't");
   });
+  test('До поворота видна только лицевая сторона', () => {
+    const card = document.createElement('div');
+    card.className = 'flashcard';
+    const front = document.createElement('div');
+    const back = document.createElement('div');
+    front.className = 'card-face card-front';
+    back.className = 'card-face card-back';
+    front.style.transition = 'none';
+    back.style.transition = 'none';
+    card.append(front, back);
+    document.body.appendChild(card);
+    equal(getComputedStyle(front).visibility, 'visible');
+    equal(getComputedStyle(back).visibility, 'hidden');
+    card.remove();
+  });
+  test('После поворота видна только обратная сторона', () => {
+    const card = document.createElement('div');
+    card.className = 'flashcard flipped';
+    const front = document.createElement('div');
+    const back = document.createElement('div');
+    front.className = 'card-face card-front';
+    back.className = 'card-face card-back';
+    front.style.transition = 'none';
+    back.style.transition = 'none';
+    card.append(front, back);
+    document.body.appendChild(card);
+    equal(getComputedStyle(front).visibility, 'hidden');
+    equal(getComputedStyle(back).visibility, 'visible');
+    card.remove();
+  });
   test('Точность везде учитывает ошибки, «почти» и пропуски', () => {
     equal(C.calculateAccuracy({ correct: 1, almost: 1, wrong: 1, skipped: 1 }), 25);
     equal(C.calculateAccuracy({ correct: 0, almost: 0, wrong: 0, skipped: 0 }), 0);
@@ -134,6 +164,47 @@
     equal(migrated.groups[0].words[0].acceptedAnswers[0], 'кошка');
     equal(migrated.stats.totalAlmost, 0);
     equal(migrated.settings.fuzzy, true);
+  });
+  test('Локальный перевод использует прямую проверенную модель', () => {
+    const route = window.LinguaTranslationModels.getRoute('en', 'ru');
+    deepEqual(route, ['en-ru']);
+    equal(window.LinguaTranslationModels.getModel(route[0]).id, 'Xenova/opus-mt-en-ru');
+  });
+  test('Непрямой маршрут проходит через английский', () => {
+    deepEqual(window.LinguaTranslationModels.getRoute('de', 'ru'), ['de-en', 'en-ru']);
+    equal(window.LinguaTranslationModels.getRouteSize(['de-en', 'en-ru']), 217);
+  });
+  test('Непроверенная языковая пара не создаёт фиктивную модель', () => {
+    deepEqual(window.LinguaTranslationModels.getRoute('en', 'pt'), []);
+    deepEqual(window.LinguaTranslationModels.getRoute('pt', 'ru'), []);
+  });
+  test('MyMemory считает локальную оценку остатка', () => {
+    const settings = { myMemoryDate: '', myMemoryUsed: 0 };
+    const now = new Date(2026, 0, 15, 12).getTime();
+    C.recordMyMemoryUsage(settings, 'кот', false, now);
+    const usage = C.getMyMemoryUsage(settings, now);
+    equal(usage.used, 3);
+    equal(usage.remaining, 4997);
+  });
+  test('Оценка MyMemory сбрасывается на следующий день', () => {
+    const day = new Date(2026, 0, 15, 12).getTime();
+    const settings = { myMemoryDate: C.localDay(day), myMemoryUsed: 4500 };
+    equal(C.getMyMemoryUsage(settings, day).remaining, 500);
+    equal(C.getMyMemoryUsage(settings, new Date(2026, 0, 16, 12).getTime()).remaining, 5000);
+  });
+  test('Серверное исчерпание MyMemory обнуляет оценку остатка', () => {
+    const settings = { myMemoryDate: '', myMemoryUsed: 0 };
+    const usage = C.recordMyMemoryUsage(settings, 'cat', true);
+    equal(usage.used, 5000);
+    equal(usage.remaining, 0);
+  });
+  test('Настройки перевода проходят валидацию и миграцию', () => {
+    const data = C.normalizeAppData({ groups: [], settings: { translationProvider: 'mymemory', onboardingCompleted: true, myMemoryUsed: 120 } });
+    equal(data.settings.translationProvider, 'mymemory');
+    equal(data.settings.onboardingCompleted, true);
+    equal(data.settings.myMemoryUsed, 120);
+    const invalid = C.normalizeAppData({ groups: [], settings: { translationProvider: 'unknown' } });
+    equal(invalid.settings.translationProvider, 'local');
   });
   test('Восстановление отклоняет файл без массива групп', () => {
     throws(() => C.normalizeAppData({ settings: {} }));

@@ -5,7 +5,8 @@
   const $ = id => document.getElementById(id);
   const SITE_LANGS = ['ru', 'en', 'de', 'fr', 'es'];
   const SITE_LANG_NAMES = { ru: 'Русский', en: 'English', de: 'Deutsch', fr: 'Français', es: 'Español' };
-  const TRANSLATE_PROXY = 'https://functions.yandexcloud.net/d4e84mujc8k6p8cfvslp';
+  const TM = globalThis.LinguaTranslationModels;
+  const translator = globalThis.LinguaTranslator;
   const T = {
     navGroups: ['📚 Группы', '📚 Groups', '📚 Gruppen', '📚 Groupes', '📚 Grupos'],
     navStats: ['📊 Статистика', '📊 Statistics', '📊 Statistik', '📊 Statistiques', '📊 Estadísticas'],
@@ -95,7 +96,7 @@
     deleteAll: ['Удалить все данные', 'Delete all data', 'Alle Daten löschen', 'Supprimer toutes les données', 'Eliminar todos los datos'],
     deleteAllDesc: ['Безвозвратно удалит группы, статистику и настройки', 'Permanently deletes groups, statistics and settings', 'Löscht Gruppen, Statistik und Einstellungen', 'Supprime groupes, statistiques et paramètres', 'Elimina grupos, estadísticas y ajustes'],
     delete: ['🗑 Удалить', '🗑 Delete', '🗑 Löschen', '🗑 Supprimer', '🗑 Eliminar'],
-    privacy: ['Автоматический перевод отправляет введённые слова в Yandex Cloud. Остальные данные хранятся только в вашем браузере.', 'Automatic translation sends entered words to Yandex Cloud. Other data stays in your browser.', 'Die automatische Übersetzung sendet Wörter an Yandex Cloud. Andere Daten bleiben im Browser.', 'La traduction envoie les mots à Yandex Cloud. Les autres données restent dans votre navigateur.', 'La traducción envía palabras a Yandex Cloud. Los demás datos permanecen en tu navegador.'],
+    privacy: ['Локальный перевод не отправляет текст на сервер. MyMemory отправляет текст только при явном использовании этого режима. Группы и статистика хранятся в вашем браузере.', 'Local translation does not send text to a server. MyMemory sends text only when you explicitly use it. Groups and statistics stay in your browser.', 'Lokale Übersetzung sendet keinen Text. MyMemory sendet Text nur nach ausdrücklicher Auswahl. Gruppen und Statistik bleiben im Browser.', 'La traduction locale n’envoie pas de texte. MyMemory envoie du texte uniquement si vous le choisissez. Groupes et statistiques restent dans le navigateur.', 'La traducción local no envía texto. MyMemory solo envía texto si lo eliges explícitamente. Grupos y estadísticas permanecen en tu navegador.'],
     footer: ['LinguaCards v3.0 · Данные хранятся в вашем браузере', 'LinguaCards v3.0 · Data stored in your browser', 'LinguaCards v3.0 · Daten im Browser gespeichert', 'LinguaCards v3.0 · Données stockées dans votre navigateur', 'LinguaCards v3.0 · Datos guardados en tu navegador'],
     confirm: ['Подтверждение', 'Confirmation', 'Bestätigung', 'Confirmation', 'Confirmación'],
     confirmAction: ['Подтвердить', 'Confirm', 'Bestätigen', 'Confirmer', 'Confirmar'],
@@ -168,6 +169,8 @@
   let currentStudyGroupId = null;
   let pendingRestore = null;
   let bulkAbort = null;
+  let onboardingProvider = 'local';
+  let modelOperation = false;
   let storageWarningShown = false;
   let loadWarning = false;
   let confirmAction = null;
@@ -219,10 +222,13 @@
     document.querySelector('meta[name="theme-color"]').content = appData.settings.darkMode ? '#1c1c2e' : '#e8e8f4';
     $('themeBtn').textContent = appData.settings.darkMode ? '🌙' : '☀️';
     for (const [id, key] of [['darkToggle', 'darkMode'], ['caseToggle', 'caseSensitive'], ['diacriticsToggle', 'diacriticsSensitive'], ['fuzzyToggle', 'fuzzy'], ['autoHintToggle', 'autoHint']]) $(id).checked = appData.settings[key];
+    $('translationProvider').value = appData.settings.translationProvider;
     populateLangSelects();
     applyI18n();
+    renderTranslationSettings();
   }
   function saveSettings() {
+    const previousKey = `${appData.settings.nativeLang}-${appData.settings.targetLang}-${appData.settings.translationProvider}`;
     appData.settings.darkMode = $('darkToggle').checked;
     appData.settings.caseSensitive = $('caseToggle').checked;
     appData.settings.diacriticsSensitive = $('diacriticsToggle').checked;
@@ -230,15 +236,156 @@
     appData.settings.autoHint = $('autoHintToggle').checked;
     appData.settings.nativeLang = $('nativeLangSel').value;
     appData.settings.targetLang = $('targetLangSel').value;
+    appData.settings.translationProvider = $('translationProvider').value;
+    appData.settings.onboardingCompleted = true;
+    const nextKey = `${appData.settings.nativeLang}-${appData.settings.targetLang}-${appData.settings.translationProvider}`;
+    if (previousKey !== nextKey) translator.cancelLocal();
     applySettings(); saveData(); renderGroups();
   }
   function populateLangSelects() {
     const options = C.STUDY_LANGS.map(lang => `<option value="${lang.id}">${lang.flag} ${esc(lang.name)}</option>`).join('');
-    for (const id of ['nativeLangSel', 'targetLangSel', 'gNativeLang', 'gTargetLang']) {
+    for (const id of ['nativeLangSel', 'targetLangSel', 'gNativeLang', 'gTargetLang', 'onbNativeLang', 'onbTargetLang']) {
       const select = $(id); const previous = select.value; select.innerHTML = options; if (previous) select.value = previous;
     }
-    $('nativeLangSel').value = appData.settings.nativeLang;
-    $('targetLangSel').value = appData.settings.targetLang;
+    for (const [id, value] of [['nativeLangSel', appData.settings.nativeLang], ['targetLangSel', appData.settings.targetLang], ['onbNativeLang', appData.settings.nativeLang], ['onbTargetLang', appData.settings.targetLang]]) $(id).value = value;
+  }
+  function updateMyMemoryQuota() {
+    const usage = C.getMyMemoryUsage(appData.settings);
+    $('myMemoryQuotaText').textContent = `Локальная оценка остатка: ${usage.remaining} из ${usage.limit} символов`;
+    $('myMemoryQuotaBar').max = usage.limit;
+    $('myMemoryQuotaBar').value = usage.remaining;
+    return usage;
+  }
+  function renderTranslationSettings() {
+    const provider = appData.settings.translationProvider;
+    $('localProviderSettings').hidden = provider !== 'local';
+    $('myMemoryProviderSettings').hidden = provider !== 'mymemory';
+    updateMyMemoryQuota();
+    updateGroupTranslationNote();
+    if (provider !== 'local' || modelOperation) return;
+    const route = TM.getRoute(appData.settings.nativeLang, appData.settings.targetLang);
+    $('preloadModelBtn').disabled = !route.length;
+    if (!route.length) {
+      $('localModelStatus').textContent = 'Для этой пары нет проверенного локального маршрута. Можно использовать ручной ввод или явно выбрать MyMemory.';
+      return;
+    }
+    const size = TM.getRouteSize(route);
+    const state = translator.getLocalState();
+    if (state.status === 'ready') $('localModelStatus').textContent = `Загружена модель ${state.modelId}. Ускорение: ${state.device}. В памяти остаётся только последняя использованная модель.`;
+    else $('localModelStatus').textContent = `Примерный размер скачивания: ${size} МБ${route.length > 1 ? ' для двух моделей через английский' : ''}. Модель будет скачана по кнопке или при первом переводе.`;
+  }
+  function updateGroupTranslationNote() {
+    const note = $('groupTranslationNote');
+    if (!note) return;
+    const source = $('gTargetLang').value || appData.settings.targetLang;
+    const target = $('gNativeLang').value || appData.settings.nativeLang;
+    const provider = appData.settings.translationProvider;
+    if (provider === 'manual') note.textContent = 'Автоматический перевод отключён. Слова и переводы можно вводить вручную.';
+    else if (provider === 'mymemory') {
+      const usage = C.getMyMemoryUsage(appData.settings);
+      note.textContent = `MyMemory: текст отправляется на сторонний сервер, качество может быть низким. Локальная оценка остатка: ${usage.remaining} символов.`;
+    } else {
+      const route = TM.getRoute(source, target);
+      note.textContent = route.length ? `Локальный перевод: ${TM.getRouteSize(route)} МБ скачивания${route.length > 1 ? ', две модели через английский' : ''}. Текст не отправляется на сервер.` : 'Для этой пары локальная модель не настроена. Доступен ручной ввод; MyMemory включается отдельно в настройках.';
+    }
+    $('bulkTranslateBtn').disabled = provider === 'manual' || Boolean(bulkAbort);
+  }
+  function setOnboardingProvider(provider) {
+    onboardingProvider = provider;
+    document.querySelectorAll('[data-onb-provider]').forEach(button => {
+      const selected = button.dataset.onbProvider === provider;
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    updateOnboardingInfo();
+  }
+  function updateOnboardingInfo() {
+    const source = $('onbTargetLang').value, target = $('onbNativeLang').value;
+    const same = source === target;
+    let supported = true;
+    if (same) $('onbModelInfo').textContent = 'Выберите разные языки.';
+    else if (onboardingProvider === 'local') {
+      const route = TM.getRoute(source, target);
+      supported = route.length > 0;
+      $('onbModelInfo').textContent = route.length ? `Примерный размер: ${TM.getRouteSize(route)} МБ${route.length > 1 ? ' для двух моделей через английский' : ''}. Загрузка начнётся после нажатия кнопки.` : 'Для этой пары нет проверенной локальной модели. Выберите MyMemory или ручной ввод.';
+    } else if (onboardingProvider === 'mymemory') $('onbModelInfo').textContent = 'Текст будет отправляться в MyMemory. Анонимный лимит — 5000 символов в день; качество может быть низким. Точный остаток сервер не сообщает.';
+    else $('onbModelInfo').textContent = 'Автоматический перевод будет отключён. Его можно включить позже в настройках.';
+    $('onbSaveBtn').disabled = same || !supported || Boolean(modelOperation);
+    $('onbSaveBtn').textContent = onboardingProvider === 'local' && supported ? 'Сохранить и скачать модель' : 'Сохранить настройки';
+    $('onbProgress').hidden = true;
+  }
+  function openOnboarding() {
+    $('onbNativeLang').value = appData.settings.nativeLang;
+    $('onbTargetLang').value = appData.settings.targetLang;
+    setOnboardingProvider(appData.settings.translationProvider || 'local');
+    openModal('onboardingModal');
+  }
+  function paintModelProgress(ui, event) {
+    const info = ui === 'onb' ? $('onbModelInfo') : $('localModelStatus');
+    const wrap = ui === 'onb' ? $('onbProgress') : $('localModelProgress');
+    const bar = ui === 'onb' ? $('onbProgressBar') : $('localModelProgressBar');
+    wrap.hidden = false;
+    const modelText = event.modelCount > 1 ? `Модель ${event.modelIndex + 1}/${event.modelCount}. ` : '';
+    if (event.type === 'progress') {
+      const progress = event.progress;
+      const percent = Number.isFinite(progress.progress) ? Math.round(progress.progress) : null;
+      info.textContent = `${modelText}Загрузка ${progress.file || 'файлов'}${percent === null ? '' : `: ${percent}%`}`;
+      if (percent !== null) bar.style.width = `${percent}%`;
+    } else if (event.status === 'initializing') info.textContent = `${modelText}Инициализация ${event.device === 'webgpu' ? 'WebGPU' : 'WASM'}…`;
+    else if (event.status === 'ready') { info.textContent = `${modelText}Модель готова (${event.device}).`; bar.style.width = '100%'; }
+    else if (event.status === 'translating') info.textContent = `${modelText}Выполняется перевод…`;
+  }
+  async function downloadModels(source, target, ui) {
+    if (modelOperation) return false;
+    if (!TM.getRoute(source, target).length) return false;
+    modelOperation = true;
+    let succeeded = false;
+    try {
+      await translator.preloadLocal(source, target, event => paintModelProgress(ui, event));
+      succeeded = true;
+      return true;
+    } catch (error) {
+      const info = ui === 'onb' ? $('onbModelInfo') : $('localModelStatus');
+      info.textContent = `Не удалось подготовить модель: ${error.message}. Можно повторить попытку или выбрать ручной ввод.`;
+      return false;
+    } finally {
+      modelOperation = false;
+      if (!$('settingsModal').hidden) {
+        if (succeeded) renderTranslationSettings();
+        else $('preloadModelBtn').disabled = false;
+      }
+      if (!$('onboardingModal').hidden) $('onbSaveBtn').disabled = false;
+    }
+  }
+  async function completeOnboarding() {
+    const nativeLang = $('onbNativeLang').value, targetLang = $('onbTargetLang').value;
+    if (nativeLang === targetLang) return;
+    appData.settings.nativeLang = nativeLang;
+    appData.settings.targetLang = targetLang;
+    appData.settings.translationProvider = onboardingProvider;
+    appData.settings.onboardingCompleted = true;
+    saveData(); applySettings();
+    if (onboardingProvider === 'local') {
+      const ok = await downloadModels(targetLang, nativeLang, 'onb');
+      if (!ok) return;
+    }
+    closeModal('onboardingModal');
+  }
+  function skipOnboarding() {
+    if (modelOperation) translator.cancelLocal();
+    appData.settings.translationProvider = 'manual';
+    appData.settings.onboardingCompleted = true;
+    saveData(); applySettings(); closeModal('onboardingModal');
+  }
+  async function preloadSettingsModel() {
+    await downloadModels(appData.settings.targetLang, appData.settings.nativeLang, 'settings');
+  }
+  async function clearDownloadedModels() {
+    await translator.clearLocalModels();
+    $('localModelProgress').hidden = true;
+    $('localModelProgressBar').style.width = '0';
+    renderTranslationSettings();
+    showToast('Скачанные модели удалены. Группы и статистика сохранены.', 'info');
   }
   function renderSiteLangGrid() {
     const grid = $('siteLangGrid'); grid.replaceChildren();
@@ -261,7 +408,7 @@
   }
   function closeModal(id) {
     const modal = $(id); if (modal.hidden) return;
-    if (id === 'groupModal' && bulkAbort) { bulkAbort.abort(); bulkAbort = null; $('saveGroupBtn').disabled = false; $('bulkTranslateBtn').disabled = false; }
+    if (id === 'groupModal' && bulkAbort) { bulkAbort.abort(); translator.cancelLocal(); bulkAbort = null; $('saveGroupBtn').disabled = false; $('bulkTranslateBtn').disabled = false; }
     modal.hidden = true; syncModalState();
     const previous = modalFocus.get(modal); if (previous && previous.isConnected && !previous.closest('[hidden]')) previous.focus();
   }
@@ -310,12 +457,12 @@
   }
   function openCreateModal() {
     $('groupModalTitle').textContent = t('create'); $('groupForm').reset(); $('editGroupId').value = ''; $('wordsEditor').replaceChildren(); $('bulkInput').value = ''; bulkParsed = []; renderBulkPreview();
-    populateLangSelects(); $('gNativeLang').value = appData.settings.nativeLang; $('gTargetLang').value = appData.settings.targetLang; switchWordTab('one-by-one'); addWordRow(); openModal('groupModal'); setTimeout(() => $('gName').focus(), 50);
+    populateLangSelects(); $('gNativeLang').value = appData.settings.nativeLang; $('gTargetLang').value = appData.settings.targetLang; switchWordTab('one-by-one'); addWordRow(); updateGroupTranslationNote(); openModal('groupModal'); setTimeout(() => $('gName').focus(), 50);
   }
   function editGroup(id) {
     const group = appData.groups.find(item => item.id === id); if (!group) return;
     $('groupModalTitle').textContent = t('edit'); $('groupForm').reset(); $('editGroupId').value = id; $('gName').value = group.name; $('gDesc').value = group.desc; $('wordsEditor').replaceChildren(); $('bulkInput').value = ''; bulkParsed = []; renderBulkPreview();
-    populateLangSelects(); $('gNativeLang').value = group.nativeLang; $('gTargetLang').value = group.targetLang; switchWordTab('one-by-one'); group.words.forEach(word => addWordRow(word)); openModal('groupModal');
+    populateLangSelects(); $('gNativeLang').value = group.nativeLang; $('gTargetLang').value = group.targetLang; switchWordTab('one-by-one'); group.words.forEach(word => addWordRow(word)); updateGroupTranslationNote(); openModal('groupModal');
   }
   function deleteGroup(id) {
     const group = appData.groups.find(item => item.id === id); if (!group) return;
@@ -328,7 +475,9 @@
     row.querySelector('.word-input-w').value = source.word || ''; row.querySelector('.word-input-t').value = source.translate || '';
     row.querySelector('.word-accepted').value = (source.acceptedAnswers || []).filter(item => item !== source.translate).join('; ');
     row.querySelector('.word-alternate').value = (source.alternateWords || []).join('; '); row.querySelector('.word-example').value = source.example || ''; row.querySelector('.word-grammar').value = source.grammar || '';
-    $('wordsEditor').appendChild(row); updateWordRowLabels(); if (!word) row.querySelector('.word-input-w').focus();
+    $('wordsEditor').appendChild(row); updateWordRowLabels();
+    row.querySelector('[data-row-action="translate"]').disabled = appData.settings.translationProvider === 'manual';
+    if (!word) row.querySelector('.word-input-w').focus();
   }
   function updateWordRowLabels() {
     const native = C.getLang($('gNativeLang').value || appData.settings.nativeLang), target = C.getLang($('gTargetLang').value || appData.settings.targetLang);
@@ -381,48 +530,106 @@
     if (!bulkParsed.length) { preview.replaceChildren(); return; }
     preview.innerHTML = `<div class="bulk-preview-title">${bulkParsed.length} ${esc(t('words'))}</div><div class="bulk-preview-list">${bulkParsed.map((item, index) => `<div class="bulk-preview-item ${item.hasTranslate ? 'has-translate' : 'no-translate'}" id="bpi-${index}"><span class="bpi-word" dir="auto">${esc(item.word)}</span><span aria-hidden="true">→</span><span class="bpi-translate ${item.hasTranslate ? 'done' : 'pending'}" id="bpi-tr-${index}" dir="auto">${item.hasTranslate ? esc(item.translate) : esc(t('withoutTranslation'))}</span></div>`).join('')}</div>`;
   }
-  async function translateWord(word, sourceLang, targetLang, outerSignal) {
-    const controller = new AbortController(), abort = () => controller.abort();
-    if (outerSignal) outerSignal.addEventListener('abort', abort, { once: true });
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const response = await fetch(TRANSLATE_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: word, sourceLang, targetLang }), signal: controller.signal });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json(); if (data.error || typeof data.translation !== 'string' || !data.translation.trim()) throw new Error('Invalid translation');
-      return data.translation.trim().slice(0, 1000);
-    } finally { clearTimeout(timeout); if (outerSignal) outerSignal.removeEventListener('abort', abort); }
+  function showTranslationError(error) {
+    if (error.name === 'AbortError') return;
+    if (error.code === 'UNSUPPORTED_LOCAL_PAIR') showToast('Для этой пары нет локальной модели. Выберите MyMemory в настройках или введите перевод вручную.', 'error', 6000);
+    else if (error.code === 'MYMEMORY_LIMIT' || error.code === 'MYMEMORY_LIMIT_LOCAL') showToast('Дневной лимит MyMemory исчерпан по данным сервера или локальной оценке. Доступен ручной ввод.', 'error', 6000);
+    else if (error.code === 'MANUAL_TRANSLATION') showToast('Автоматический перевод отключён в настройках.', 'warning');
+    else showToast(error.message || t('translateError'), 'error', 6000);
+  }
+  async function translateTexts(texts, sourceLang, targetLang, callbacks = {}, signal) {
+    const provider = appData.settings.translationProvider;
+    if (provider === 'manual') {
+      const error = new Error('Автоматический перевод отключён');
+      error.code = 'MANUAL_TRANSLATION';
+      throw error;
+    }
+    if (provider === 'local') return translator.translateLocalBatch(texts, sourceLang, targetLang, callbacks);
+    const results = [];
+    for (let index = 0; index < texts.length; index++) {
+      if (signal?.aborted) throw new DOMException('Операция отменена', 'AbortError');
+      const value = texts[index];
+      const usage = C.getMyMemoryUsage(appData.settings);
+      if ([...value].length > usage.remaining) {
+        const error = new Error('Локальная оценка лимита MyMemory исчерпана');
+        error.code = 'MYMEMORY_LIMIT_LOCAL';
+        throw error;
+      }
+      C.recordMyMemoryUsage(appData.settings, value);
+      saveData(); updateMyMemoryQuota();
+      try {
+        const result = await translator.translateMyMemory(value, sourceLang, targetLang, { signal });
+        results.push(result.text);
+        if (callbacks.onItem) callbacks.onItem(index, result.text);
+        if (callbacks.onProgress) callbacks.onProgress({ index, total: texts.length, done: index + 1, modelIndex: 0, modelCount: 1 });
+      } catch (error) {
+        if (error.code === 'MYMEMORY_LIMIT') {
+          C.recordMyMemoryUsage(appData.settings, value, true);
+          saveData(); updateMyMemoryQuota();
+        }
+        throw error;
+      }
+    }
+    return results;
   }
   async function autoTranslateRow(button) {
     const row = button.closest('.word-row'), word = row.querySelector('.word-input-w').value.trim();
     if (!word) { showToast(t('noWord'), 'error'); return; }
-    button.disabled = true; button.textContent = '⏳';
-    try { row.querySelector('.word-input-t').value = await translateWord(word, $('gTargetLang').value, $('gNativeLang').value); }
-    catch (error) { showToast(t('translateError'), 'error'); }
-    finally { button.disabled = false; button.textContent = '🔄'; }
+    if (bulkAbort) { showToast(t('translationRunning'), 'warning'); return; }
+    const controller = new AbortController(); bulkAbort = controller;
+    button.disabled = true; button.textContent = '⏳'; $('saveGroupBtn').disabled = true; $('bulkTranslateBtn').disabled = true;
+    try {
+      const result = await translateTexts([word], $('gTargetLang').value, $('gNativeLang').value, {
+        onModelProgress: event => { button.title = event.progress?.file ? `Загрузка ${event.progress.file}` : 'Подготовка локальной модели…'; }
+      }, controller.signal);
+      row.querySelector('.word-input-t').value = result[0].slice(0, 1000);
+    } catch (error) { showTranslationError(error); }
+    finally {
+      if (bulkAbort === controller) bulkAbort = null;
+      button.disabled = appData.settings.translationProvider === 'manual';
+      button.textContent = '🔄'; button.title = t('translate'); $('saveGroupBtn').disabled = false;
+      updateGroupTranslationNote();
+    }
   }
   async function translateAllBulk() {
     const missing = bulkParsed.filter(item => !item.hasTranslate);
     if (!missing.length) { showToast(t('allTranslated'), 'info'); return; }
-    const controller = new AbortController(); bulkAbort = controller; $('bulkTranslateBtn').disabled = true; $('saveGroupBtn').disabled = true; $('translateProgress').hidden = false; $('translateBar').style.width = '0%';
-    let cursor = 0, done = 0;
-    const worker = async () => {
-      while (cursor < bulkParsed.length && !controller.signal.aborted) {
-        const index = cursor++, item = bulkParsed[index]; if (item.hasTranslate) continue;
-        const row = $(`bpi-${index}`), translation = $(`bpi-tr-${index}`);
-        if (row) row.className = 'bulk-preview-item translating';
-        if (translation) { translation.className = 'bpi-translate loading'; translation.textContent = t('translating'); }
-        try {
-          item.translate = await translateWord(item.word, $('gTargetLang').value, $('gNativeLang').value, controller.signal); item.hasTranslate = true;
+    if (bulkAbort) { showToast(t('translationRunning'), 'warning'); return; }
+    const controller = new AbortController(); bulkAbort = controller;
+    $('bulkTranslateBtn').disabled = true; $('saveGroupBtn').disabled = true; $('translateProgress').hidden = false; $('translateBar').style.width = '0%';
+    missing.forEach(item => {
+      const index = bulkParsed.indexOf(item), row = $(`bpi-${index}`), translation = $(`bpi-tr-${index}`);
+      if (row) row.className = 'bulk-preview-item translating';
+      if (translation) { translation.className = 'bpi-translate loading'; translation.textContent = t('translating'); }
+    });
+    try {
+      await translateTexts(missing.map(item => item.word), $('gTargetLang').value, $('gNativeLang').value, {
+        onModelProgress: event => {
+          if (event.type === 'progress') {
+            const progress = event.progress, percent = Number.isFinite(progress.progress) ? Math.round(progress.progress) : null;
+            $('bulkStatus').textContent = `Скачивание модели ${event.modelIndex + 1}/${event.modelCount}: ${progress.file || ''}${percent === null ? '' : ` ${percent}%`}`;
+          } else if (event.status === 'initializing') $('bulkStatus').textContent = `Инициализация ${event.device}…`;
+        },
+        onItem: (index, value) => {
+          const item = missing[index], originalIndex = bulkParsed.indexOf(item);
+          item.translate = value; item.hasTranslate = true;
+          const row = $(`bpi-${originalIndex}`), translation = $(`bpi-tr-${originalIndex}`);
           if (row) row.className = 'bulk-preview-item has-translate';
-          if (translation) { translation.className = 'bpi-translate done'; translation.textContent = item.translate; }
-        } catch (error) {
-          if (!controller.signal.aborted) { if (row) row.className = 'bulk-preview-item no-translate'; if (translation) { translation.className = 'bpi-translate pending'; translation.textContent = t('translateError'); } }
+          if (translation) { translation.className = 'bpi-translate done'; translation.textContent = value; }
+        },
+        onProgress: event => {
+          const percent = Math.round(((event.modelIndex || 0) + event.done / event.total) / (event.modelCount || 1) * 100);
+          $('translateBar').style.width = `${percent}%`;
+          $('bulkStatus').textContent = `Переведено ${event.done} из ${event.total}${event.modelCount > 1 ? `, модель ${event.modelIndex + 1}/${event.modelCount}` : ''}`;
         }
-        done++; $('translateBar').style.width = `${Math.round(done / missing.length * 100)}%`;
-      }
-    };
-    try { await Promise.all([worker(), worker(), worker()]); if (!controller.signal.aborted && bulkParsed.some(item => !item.hasTranslate)) showToast(t('translateError'), 'warning'); }
-    finally { if (bulkAbort === controller) bulkAbort = null; $('bulkTranslateBtn').disabled = false; $('saveGroupBtn').disabled = false; $('translateProgress').hidden = true; renderBulkPreview(); }
+      }, controller.signal);
+      if (appData.settings.translationProvider === 'mymemory') showToast('Перевод MyMemory получен. Проверьте качество перед сохранением.', 'warning', 5000);
+    } catch (error) { showTranslationError(error); }
+    finally {
+      if (bulkAbort === controller) bulkAbort = null;
+      $('saveGroupBtn').disabled = false; $('translateProgress').hidden = true;
+      updateGroupTranslationNote(); renderBulkPreview();
+    }
   }
   function shareGroup(id) {
     const group = appData.groups.find(item => item.id === id); if (!group) return;
@@ -655,14 +862,20 @@
     document.querySelector('.tab-switcher').addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); const bulk = $('tab-bulk').getAttribute('aria-selected') === 'true'; switchWordTab(bulk ? 'one-by-one' : 'bulk'); $(bulk ? 'tab-one' : 'tab-bulk').focus(); }
     });
-    $('gNativeLang').addEventListener('change', updateWordRowLabels); $('gTargetLang').addEventListener('change', updateWordRowLabels);
+    for (const id of ['gNativeLang', 'gTargetLang']) $(id).addEventListener('change', () => { updateWordRowLabels(); updateGroupTranslationNote(); });
     $('wordsEditor').addEventListener('click', event => {
       const button = event.target.closest('[data-row-action]'); if (!button) return;
       if (button.dataset.rowAction === 'remove') button.closest('.word-row').remove(); if (button.dataset.rowAction === 'translate') autoTranslateRow(button);
     });
     $('bulkInput').addEventListener('input', onBulkInput); $('bulkTranslateBtn').addEventListener('click', translateAllBulk); $('copyShareBtn').addEventListener('click', copyShareCode);
     $('backupBtn').addEventListener('click', backupData); $('restoreInput').addEventListener('change', restoreData); $('deleteAllBtn').addEventListener('click', confirmDeleteAll);
-    for (const id of ['darkToggle', 'caseToggle', 'diacriticsToggle', 'fuzzyToggle', 'autoHintToggle', 'nativeLangSel', 'targetLangSel']) $(id).addEventListener('change', saveSettings);
+    for (const id of ['darkToggle', 'caseToggle', 'diacriticsToggle', 'fuzzyToggle', 'autoHintToggle', 'nativeLangSel', 'targetLangSel', 'translationProvider']) $(id).addEventListener('change', saveSettings);
+    for (const id of ['onbNativeLang', 'onbTargetLang']) $(id).addEventListener('change', updateOnboardingInfo);
+    document.querySelectorAll('[data-onb-provider]').forEach(button => button.addEventListener('click', () => setOnboardingProvider(button.dataset.onbProvider)));
+    $('onbSaveBtn').addEventListener('click', completeOnboarding);
+    $('onbSkipBtn').addEventListener('click', skipOnboarding);
+    $('preloadModelBtn').addEventListener('click', preloadSettingsModel);
+    $('clearModelsBtn').addEventListener('click', clearDownloadedModels);
     $('siteLangGrid').addEventListener('click', event => {
       const button = event.target.closest('[data-lang]'); if (!button) return;
       appData.settings.siteLang = button.dataset.lang; saveData(); applyI18n(); renderGroups(); if ($('page-stats').classList.contains('active')) renderStats(); showToast(t('languageChanged'), 'success');
@@ -679,11 +892,11 @@
     $('flashcardFC').addEventListener('keydown', event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); flipFC(); } });
     $('testQuestion').addEventListener('click', event => { const button = event.target.closest('[data-option-index]'); if (button) checkTestAnswer(Number(button.dataset.optionIndex)); });
     document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.dataset.close)));
-    document.querySelectorAll('.modal-overlay').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal) closeModal(modal.id); }));
+    document.querySelectorAll('.modal-overlay').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal && modal.id !== 'onboardingModal') closeModal(modal.id); }));
     $('confirmOkBtn').addEventListener('click', () => { const action = confirmAction; confirmAction = null; closeModal('confirmModal'); if (action) action(); });
     document.addEventListener('keydown', event => {
       const openModals = [...document.querySelectorAll('.modal-overlay')].filter(modal => !modal.hidden), top = openModals[openModals.length - 1];
-      if (top) { if (event.key === 'Escape') { event.preventDefault(); closeModal(top.id); } else if (event.key === 'Tab') trapFocus(event, top); return; }
+      if (top) { if (event.key === 'Escape') { event.preventDefault(); if (top.id !== 'onboardingModal') closeModal(top.id); } else if (event.key === 'Tab') trapFocus(event, top); return; }
       if (!$('studyFullscreen').hidden) {
         if (event.key === 'Escape') { event.preventDefault(); exitStudy(); }
         else if (SS.mode === 'flashcard' && !event.repeat && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) { if (event.key === 'ArrowRight') rateFC(true); if (event.key === 'ArrowLeft') rateFC(false); }
@@ -691,5 +904,6 @@
     });
   }
   loadData(); bindEvents(); applySettings(); showPage('groups');
+  if (!appData.settings.onboardingCompleted) setTimeout(openOnboarding, 100);
   if (loadWarning) setTimeout(() => showToast(t('loadError'), 'warning', 8000), 100);
 })();
