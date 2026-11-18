@@ -262,12 +262,48 @@
     $('myMemoryQuotaBar').value = usage.remaining;
     return usage;
   }
+  let modelListVersion = 0;
+  async function refreshInstalledModels() {
+    const version = ++modelListVersion;
+    $('installedModelsEmpty').textContent = 'Скачанных моделей пока нет';
+    try {
+      const models = await translator.listLocalModels();
+      if (version !== modelListVersion) return;
+      const state = translator.getLocalState();
+      $('installedModelsCount').textContent = String(models.length);
+      $('installedModelsEmpty').hidden = models.length > 0;
+      const list = $('installedModelsList');
+      list.replaceChildren();
+      for (const model of models) {
+        const row = document.createElement('div');
+        row.className = 'installed-model';
+        const name = document.createElement('div');
+        name.className = 'installed-model-name';
+        name.textContent = model.pair.replace('-', ' → ').toUpperCase();
+        const id = document.createElement('div');
+        id.className = 'installed-model-id';
+        id.textContent = model.id;
+        const meta = document.createElement('div');
+        meta.className = `installed-model-meta${model.complete ? '' : ' partial'}`;
+        const status = state.status === 'ready' && state.modelId === model.id ? ` · ${state.device}` : model.complete ? ' · готова' : ' · частично';
+        meta.textContent = `~${model.sizeMB} МБ${status}`;
+        row.append(name, id, meta);
+        list.appendChild(row);
+      }
+    } catch (error) {
+      if (version !== modelListVersion) return;
+      $('installedModelsCount').textContent = '—';
+      $('installedModelsEmpty').hidden = false;
+      $('installedModelsEmpty').textContent = 'Не удалось прочитать список моделей из кэша';
+    }
+  }
   function renderTranslationSettings() {
     const provider = appData.settings.translationProvider;
     $('localProviderSettings').hidden = provider !== 'local';
     $('myMemoryProviderSettings').hidden = provider !== 'mymemory';
     updateMyMemoryQuota();
     updateGroupTranslationNote();
+    if (provider === 'local' && !modelOperation) refreshInstalledModels();
     if (provider !== 'local' || modelOperation) return;
     const route = TM.getRoute(appData.settings.nativeLang, appData.settings.targetLang);
     $('preloadModelBtn').disabled = !route.length;
@@ -356,6 +392,7 @@
       return false;
     } finally {
       modelOperation = false;
+      if (succeeded) refreshInstalledModels();
       if ($('page-settings').classList.contains('active')) {
         if (succeeded) renderTranslationSettings();
         else $('preloadModelBtn').disabled = false;

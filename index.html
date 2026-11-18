@@ -78,7 +78,13 @@
           <section class="glass settings-block" id="translationSettingsBlock">
             <h3 id="translationSettingsTitle">Перевод</h3>
             <div class="form-group"><label for="translationProvider" id="translationProviderLabel">Способ автоматического перевода</label><select id="translationProvider"><option value="local">На устройстве — лучше приватность</option><option value="mymemory">MyMemory — онлайн, качество ниже</option><option value="manual">Только ручной ввод</option></select></div>
-            <div id="localProviderSettings"><p class="settings-note" id="localProviderDescription">Перевод выполняется на устройстве. Модель скачивается отдельно для языкового направления и может занимать более 100 МБ.</p><div class="model-status" id="localModelStatus" role="status">Модель будет скачана при первом переводе.</div><div class="model-progress" id="localModelProgress" hidden><div id="localModelProgressBar"></div></div><div class="settings-actions"><button type="button" class="btn btn-ghost btn-sm" id="preloadModelBtn">Скачать модель</button><button type="button" class="btn btn-ghost btn-sm" id="clearModelsBtn">Удалить модели</button></div></div>
+            <div id="localProviderSettings"><p class="settings-note" id="localProviderDescription">Перевод выполняется на устройстве. Модель скачивается отдельно для языкового направления и может занимать более 100 МБ.</p><div class="model-status" id="localModelStatus" role="status">Модель будет скачана при первом переводе.</div><div class="model-progress" id="localModelProgress" hidden><div id="localModelProgressBar"></div></div><div class="settings-actions"><button type="button" class="btn btn-ghost btn-sm" id="preloadModelBtn">Скачать модель</button><button type="button" class="btn btn-ghost btn-sm" id="clearModelsBtn">Удалить модели</button></div>
+              <div class="installed-models" id="installedModels">
+                <div class="installed-models-heading"><h4 id="installedModelsTitle">Установленные модели</h4><span id="installedModelsCount">0</span></div>
+                <p class="settings-note" id="installedModelsEmpty">Скачанных моделей пока нет</p>
+                <div class="installed-models-list" id="installedModelsList"></div>
+              </div>
+            </div>
             <div id="myMemoryProviderSettings" hidden><p class="settings-note warning-note" id="myMemoryWarning">MyMemory может возвращать неточный перевод. Всегда проверяйте результат. Текст отправляется на сторонний сервер.</p><div class="quota-line"><span id="myMemoryQuotaText">Оценка остатка: 5000 из 5000 символов</span><progress id="myMemoryQuotaBar" max="5000" value="5000"></progress></div><p class="settings-note" id="myMemoryQuotaNote">Это локальная оценка для анонимного лимита 5000 символов в день. MyMemory не сообщает точный остаток; лимит может быть общим для вашего IP.</p></div>
           </section>
           <section class="glass settings-block">

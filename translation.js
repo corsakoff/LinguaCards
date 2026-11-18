@@ -118,6 +118,41 @@
     rejectPending(abortError());
   }
 
+  function modelIdFromUrl(value) {
+    try {
+      const url = new URL(value);
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (url.hostname !== 'huggingface.co' || parts.length < 4 || parts[2] !== 'resolve') return null;
+      return `${parts[0]}/${parts[1]}`;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async function listLocalModels() {
+    if (!('caches' in globalThis)) return [];
+    const cache = await caches.open('transformers-cache');
+    const requests = await cache.keys();
+    const files = new Map();
+    for (const request of requests) {
+      const id = modelIdFromUrl(request.url);
+      if (!id || !id.startsWith('Xenova/opus-mt-')) continue;
+      if (!files.has(id)) files.set(id, new Set());
+      files.get(id).add(new URL(request.url).pathname);
+    }
+    return Object.values(registry.models).filter(model => files.has(model.id)).map(model => {
+      const paths = files.get(model.id);
+      const required = ['onnx/encoder_model_quantized.onnx', 'onnx/decoder_model_merged_quantized.onnx'];
+      return {
+        id: model.id,
+        pair: Object.entries(registry.models).find(([, item]) => item.id === model.id)[0],
+        sizeMB: model.sizeMB,
+        complete: required.every(suffix => [...paths].some(path => path.endsWith(suffix))),
+        fileCount: paths.size
+      };
+    }).sort((a, b) => a.pair.localeCompare(b.pair));
+  }
+
   async function clearLocalModels() {
     cancelLocal();
     if ('caches' in globalThis) await caches.delete('transformers-cache');
@@ -167,6 +202,7 @@
     translateMyMemory,
     cancelLocal,
     clearLocalModels,
+    listLocalModels,
     getLocalState: () => ({ ...localState })
   };
 })();
