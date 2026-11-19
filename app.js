@@ -175,12 +175,14 @@
   let currentStudyGroupId = null;
   let pendingRestore = null;
   let bulkAbort = null;
+  let editorDirection = 'target-native';
   let onboardingProvider = 'local';
   let modelOperation = false;
   let storageWarningShown = false;
   let loadWarning = false;
   let confirmAction = null;
   const modalFocus = new WeakMap();
+  const flipAnimations = new WeakMap();
   let SS = emptySession();
 
   function t(key, values = {}) {
@@ -225,12 +227,14 @@
   }
   function applySettings() {
     document.body.className = appData.settings.darkMode ? 'dark' : 'light';
+    document.body.dataset.accent = appData.settings.accentColor;
     document.querySelector('meta[name="theme-color"]').content = appData.settings.darkMode ? '#0b0d14' : '#f5f7fa';
     $('themeBtn').innerHTML = I.icon(appData.settings.darkMode ? 'moon' : 'sun');
     for (const [id, key] of [['darkToggle', 'darkMode'], ['caseToggle', 'caseSensitive'], ['diacriticsToggle', 'diacriticsSensitive'], ['fuzzyToggle', 'fuzzy'], ['autoHintToggle', 'autoHint']]) $(id).checked = appData.settings[key];
     $('translationProvider').value = appData.settings.translationProvider;
     populateLangSelects();
     applyI18n();
+    renderAccentColorGrid();
     renderTranslationSettings();
   }
   function saveSettings() {
@@ -254,6 +258,24 @@
       const select = $(id); const previous = select.value; select.innerHTML = options; if (previous) select.value = previous;
     }
     for (const [id, value] of [['nativeLangSel', appData.settings.nativeLang], ['targetLangSel', appData.settings.targetLang], ['onbNativeLang', appData.settings.nativeLang], ['onbTargetLang', appData.settings.targetLang]]) $(id).value = value;
+  }
+  function renderAccentColorGrid() {
+    const grid = $('accentColorGrid');
+    grid.replaceChildren();
+    const colors = [['green', 'Зелёный'], ['blue', 'Синий'], ['amber', 'Янтарный'], ['coral', 'Коралловый']];
+    for (const [value, label] of colors) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'accent-option';
+      button.dataset.accent = value;
+      button.title = label;
+      button.setAttribute('aria-label', label);
+      button.setAttribute('aria-pressed', String(appData.settings.accentColor === value));
+      const swatch = document.createElement('span');
+      swatch.className = 'accent-swatch';
+      button.appendChild(swatch);
+      grid.appendChild(button);
+    }
   }
   function updateMyMemoryQuota() {
     const usage = C.getMyMemoryUsage(appData.settings);
@@ -319,8 +341,7 @@
   function updateGroupTranslationNote() {
     const note = $('groupTranslationNote');
     if (!note) return;
-    const source = $('gTargetLang').value || appData.settings.targetLang;
-    const target = $('gNativeLang').value || appData.settings.nativeLang;
+    const { source, target } = getEditorTranslationLanguages();
     const provider = appData.settings.translationProvider;
     if (provider === 'manual') note.textContent = 'Автоматический перевод отключён. Слова и переводы можно вводить вручную.';
     else if (provider === 'mymemory') {
@@ -474,7 +495,7 @@
   function renderGroups() {
     const grid = $('groupsGrid');
     if (!appData.groups.length) {
-      grid.innerHTML = `<div class="glass empty-state"><div class="es-icon">${I.icon('book')}</div><h2>${esc(t('noGroups'))}</h2><p>${esc(t('noGroupsDesc'))}</p><div class="empty-actions"><button type="button" class="btn btn-primary" data-action="create">${I.icon('plus')}${esc(t('create'))}</button><button type="button" class="btn btn-ghost" data-action="sample">${esc(t('addSample'))}</button></div></div>`;
+      grid.innerHTML = `<div class="glass empty-state"><div class="es-icon">${I.icon('book')}</div><h2>${esc(t('noGroups'))}</h2><p>${esc(t('noGroupsDesc'))}</p><div class="empty-actions"><button type="button" class="btn btn-primary" data-action="create">${I.icon('plus')}${esc(t('create'))}</button></div></div>`;
       return;
     }
     const now = Date.now();
@@ -484,12 +505,8 @@
       const more = group.words.length > 5 ? `<span class="word-chip">+${group.words.length - 5}</span>` : '';
       const accuracy = C.calculateAccuracy(groupStats(group.id));
       const learning = C.getGroupLearning(group, now);
-      return `<article class="glass group-card"><div class="group-card-header"><div class="group-card-heading"><h2 class="group-title">${esc(group.name)}</h2><div class="group-meta">${target.id.toUpperCase()} · ${esc(target.name)} → ${native.id.toUpperCase()} · ${esc(native.name)} · ${group.words.length} ${esc(t('words'))}</div>${group.desc ? `<div class="group-desc">${esc(group.desc)}</div>` : ''}</div><span class="badge badge-success" title="${esc(t('accuracy'))}">${accuracy}%</span></div><div class="word-chips">${preview}${more}</div><div class="learning-meta"><span><strong>${learning.learned}/${group.words.length}</strong> ${esc(t('learned'))}</span><span><strong>${learning.due}</strong> ${esc(t('due').toLocaleLowerCase())}</span><span><strong>${learning.difficult}</strong> ${esc(t('difficult'))}</span></div><div class="group-actions"><button type="button" class="btn btn-primary btn-sm" data-action="study" data-id="${group.id}">${I.icon('play')}${esc(t('study'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit" data-id="${group.id}">${I.icon('pencil')}${esc(t('edit'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="share" data-id="${group.id}">${I.icon('link')}${esc(t('share'))}</button><button type="button" class="btn btn-danger btn-sm" data-action="delete" data-id="${group.id}" aria-label="${esc(t('delete'))}: ${esc(group.name)}">${I.icon('trash')}</button></div></article>`;
+      return `<article class="glass group-card"><div class="group-card-header"><div class="group-card-heading"><h2 class="group-title">${esc(group.name)}</h2><div class="group-meta">${target.id.toUpperCase()} · ${esc(target.name)} → ${native.id.toUpperCase()} · ${esc(native.name)} · ${group.words.length} ${esc(t('words'))}</div>${group.desc ? `<div class="group-desc">${esc(group.desc)}</div>` : ''}</div><span class="badge badge-success" title="${esc(t('accuracy'))}">${accuracy}%</span></div><div class="word-chips">${preview}${more}</div><div class="learning-meta"><span><strong>${learning.learned}/${group.words.length}</strong> ${esc(t('learned'))}</span><span><strong>${learning.due}</strong> ${esc(t('due').toLocaleLowerCase())}</span><span><strong>${learning.difficult}</strong> ${esc(t('difficult'))}</span></div><div class="group-actions"><button type="button" class="btn btn-primary btn-sm" data-action="study" data-id="${group.id}">${I.icon('play')}${esc(t('study'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="edit" data-id="${group.id}">${I.icon('pencil')}${esc(t('edit'))}</button><button type="button" class="btn btn-ghost btn-sm" data-action="share" data-id="${group.id}">${I.icon('link')}${esc(t('share'))}</button><button type="button" class="btn btn-danger btn-sm" data-action="delete" data-id="${group.id}" aria-label="${esc(t('delete'))}: ${esc(group.name)}">${I.icon('trash')}${esc(t('delete'))}</button></div></article>`;
     }).join('');
-  }
-  function addSampleGroup() {
-    const sample = C.createSampleGroup(); if (appData.groups.some(group => group.id === sample.id)) sample.id = C.uid('g');
-    appData.groups.push(sample); saveData(); renderGroups();
   }
   function switchWordTab(tab) {
     const one = tab === 'one-by-one';
@@ -499,12 +516,12 @@
   }
   function openCreateModal() {
     $('groupModalTitle').textContent = t('create'); $('groupForm').reset(); $('editGroupId').value = ''; $('wordsEditor').replaceChildren(); $('bulkInput').value = ''; bulkParsed = []; renderBulkPreview();
-    populateLangSelects(); $('gNativeLang').value = appData.settings.nativeLang; $('gTargetLang').value = appData.settings.targetLang; switchWordTab('one-by-one'); addWordRow(); updateGroupTranslationNote(); openModal('groupModal'); setTimeout(() => $('gName').focus(), 50);
+    populateLangSelects(); $('gNativeLang').value = appData.settings.nativeLang; $('gTargetLang').value = appData.settings.targetLang; $('gInputDirection').value = 'target-native'; editorDirection = 'target-native'; switchWordTab('one-by-one'); addWordRow(); updateGroupTranslationNote(); openModal('groupModal'); setTimeout(() => $('gName').focus(), 50);
   }
   function editGroup(id) {
     const group = appData.groups.find(item => item.id === id); if (!group) return;
     $('groupModalTitle').textContent = t('edit'); $('groupForm').reset(); $('editGroupId').value = id; $('gName').value = group.name; $('gDesc').value = group.desc; $('wordsEditor').replaceChildren(); $('bulkInput').value = ''; bulkParsed = []; renderBulkPreview();
-    populateLangSelects(); $('gNativeLang').value = group.nativeLang; $('gTargetLang').value = group.targetLang; switchWordTab('one-by-one'); group.words.forEach(word => addWordRow(word)); updateGroupTranslationNote(); openModal('groupModal');
+    populateLangSelects(); $('gNativeLang').value = group.nativeLang; $('gTargetLang').value = group.targetLang; $('gInputDirection').value = 'target-native'; editorDirection = 'target-native'; switchWordTab('one-by-one'); group.words.forEach(word => addWordRow(word)); updateGroupTranslationNote(); openModal('groupModal');
   }
   function deleteGroup(id) {
     const group = appData.groups.find(item => item.id === id); if (!group) return;
@@ -521,20 +538,44 @@
     row.querySelector('[data-row-action="translate"]').disabled = appData.settings.translationProvider === 'manual';
     if (!word) row.querySelector('.word-input-w').focus();
   }
+  function isNativeInput() { return editorDirection === 'native-target'; }
+  function getEditorTranslationLanguages() {
+    const native = $('gNativeLang').value || appData.settings.nativeLang, target = $('gTargetLang').value || appData.settings.targetLang;
+    return isNativeInput() ? { source: native, target } : { source: target, target: native };
+  }
+  function changeEditorDirection() {
+    const next = $('gInputDirection').value;
+    if (next === editorDirection) return;
+    document.querySelectorAll('#wordsEditor .word-row').forEach(row => {
+      for (const [leftSelector, rightSelector] of [['.word-input-w', '.word-input-t'], ['.word-accepted', '.word-alternate']]) {
+        const left = row.querySelector(leftSelector), right = row.querySelector(rightSelector);
+        const value = left.value; left.value = right.value; right.value = value;
+      }
+    });
+    bulkParsed.forEach(item => { const value = item.word; item.word = item.translate; item.translate = value; });
+    if (bulkParsed.length) {
+      $('bulkInput').value = bulkParsed.map(item => item.hasTranslate ? `${item.word} - ${item.translate}` : item.word).join('\n');
+      renderBulkPreview();
+    }
+    editorDirection = next;
+    updateWordRowLabels(); updateGroupTranslationNote();
+  }
   function updateWordRowLabels() {
     const native = C.getLang($('gNativeLang').value || appData.settings.nativeLang), target = C.getLang($('gTargetLang').value || appData.settings.targetLang);
+    const left = isNativeInput() ? native : target, right = isNativeInput() ? target : native;
     document.querySelectorAll('#wordsEditor .word-row').forEach(row => {
-      row.querySelector('.word-label-w').textContent = `${target.id.toUpperCase()} · ${target.name}`; row.querySelector('.word-label-t').textContent = `${native.id.toUpperCase()} · ${native.name}`;
-      row.querySelector('.word-input-w').setAttribute('aria-label', `${t('word')}: ${target.name}`); row.querySelector('.word-input-t').setAttribute('aria-label', `${t('translation')}: ${native.name}`);
+      row.querySelector('.word-label-w').textContent = `${left.id.toUpperCase()} · ${left.name}`; row.querySelector('.word-label-t').textContent = `${right.id.toUpperCase()} · ${right.name}`;
+      row.querySelector('.word-input-w').setAttribute('aria-label', left.name); row.querySelector('.word-input-t').setAttribute('aria-label', right.name);
     });
   }
   function splitAliases(value) { return C.uniqueStrings(String(value || '').split(/[;\n]/), 1000); }
   function readEditorWords() {
     const words = [], seen = new Set();
     document.querySelectorAll('#wordsEditor .word-row').forEach(row => {
-      const source = row._word || {}, translate = row.querySelector('.word-input-t').value.trim();
+      const source = row._word || {}, left = row.querySelector('.word-input-w').value.trim(), right = row.querySelector('.word-input-t').value.trim();
+      const translate = isNativeInput() ? left : right, targetWord = isNativeInput() ? right : left;
       try {
-        const word = C.normalizeWord({ ...source, id: source.id, word: row.querySelector('.word-input-w').value, translate, acceptedAnswers: [translate, ...splitAliases(row.querySelector('.word-accepted').value)], alternateWords: splitAliases(row.querySelector('.word-alternate').value), example: row.querySelector('.word-example').value, grammar: row.querySelector('.word-grammar').value });
+        const word = C.normalizeWord({ ...source, id: source.id, word: targetWord, translate, acceptedAnswers: [translate, ...splitAliases(row.querySelector('.word-accepted').value)], alternateWords: splitAliases(row.querySelector('.word-alternate').value), example: row.querySelector('.word-example').value, grammar: row.querySelector('.word-grammar').value });
         const key = word.word.toLocaleLowerCase(); if (!seen.has(key)) { seen.add(key); words.push(word); }
       } catch (error) {}
     });
@@ -544,9 +585,10 @@
     const result = [];
     for (const item of bulkParsed) {
       if (!item.word || !item.translate) continue;
-      const key = item.word.toLocaleLowerCase(); if (seen.has(key)) continue;
+      const content = isNativeInput() ? { word: item.translate, translate: item.word } : { word: item.word, translate: item.translate };
+      const key = content.word.toLocaleLowerCase(); if (seen.has(key)) continue;
       const old = existingWords.find(word => word.word.toLocaleLowerCase() === key);
-      try { const word = C.normalizeWord({ ...old, ...item, id: old ? old.id : undefined }); seen.add(key); result.push(word); } catch (error) {}
+      try { const word = C.normalizeWord({ ...old, ...content, id: old ? old.id : undefined }); seen.add(key); result.push(word); } catch (error) {}
     }
     return result;
   }
@@ -620,8 +662,9 @@
     if (bulkAbort) { showToast(t('translationRunning'), 'warning'); return; }
     const controller = new AbortController(); bulkAbort = controller;
     button.disabled = true; button.textContent = '…'; $('saveGroupBtn').disabled = true; $('bulkTranslateBtn').disabled = true;
+    const languages = getEditorTranslationLanguages();
     try {
-      const result = await translateTexts([word], $('gTargetLang').value, $('gNativeLang').value, {
+      const result = await translateTexts([word], languages.source, languages.target, {
         onModelProgress: event => { button.title = event.progress?.file ? `Загрузка ${event.progress.file}` : 'Подготовка локальной модели…'; }
       }, controller.signal);
       row.querySelector('.word-input-t').value = result[0].slice(0, 1000);
@@ -644,8 +687,9 @@
       if (row) row.className = 'bulk-preview-item translating';
       if (translation) { translation.className = 'bpi-translate loading'; translation.textContent = t('translating'); }
     });
+    const languages = getEditorTranslationLanguages();
     try {
-      await translateTexts(missing.map(item => item.word), $('gTargetLang').value, $('gNativeLang').value, {
+      await translateTexts(missing.map(item => item.word), languages.source, languages.target, {
         onModelProgress: event => {
           if (event.type === 'progress') {
             const progress = event.progress, percent = Number.isFinite(progress.progress) ? Math.round(progress.progress) : null;
@@ -740,7 +784,9 @@
     $('studyResults').hidden = !results; $('writeMode').hidden = results || SS.mode === 'flashcard' || SS.mode === 'test'; $('fcMode').hidden = results || SS.mode !== 'flashcard'; $('testMode').hidden = results || SS.mode !== 'test';
   }
   function exitStudy() {
-    clearTimeout(SS.timer); const token = (SS.token || 0) + 1; SS = emptySession(); SS.token = token; $('studyFullscreen').hidden = true; syncModalState(); renderGroups(); if ($('page-stats').classList.contains('active')) renderStats();
+    clearTimeout(SS.timer);
+    cancelFlipAnimation($('flashcard')); cancelFlipAnimation($('flashcardFC'));
+    const token = (SS.token || 0) + 1; SS = emptySession(); SS.token = token; $('studyFullscreen').hidden = true; syncModalState(); renderGroups(); if ($('page-stats').classList.contains('active')) renderStats();
   }
   function cardExtra(card, back = false) {
     if (back) return [card.original.grammar, card.original.example].filter(Boolean).join('\n');
@@ -749,10 +795,40 @@
   function setCardText(frontId, backId, card) {
     for (const [id, value] of [[frontId, card.front], [backId, card.back]]) { const element = $(id); element.textContent = value; element.dir = 'auto'; }
   }
+  function cancelFlipAnimation(card) {
+    const animation = flipAnimations.get(card);
+    if (animation) {
+      clearTimeout(animation.midpoint);
+      clearTimeout(animation.finish);
+    }
+    flipAnimations.delete(card);
+    card.classList.remove('turning');
+  }
+  function animateCardFlip(card, changeSide, onFinish) {
+    if (flipAnimations.has(card)) return false;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      changeSide();
+      if (onFinish) onFinish();
+      return true;
+    }
+    const animation = { midpoint: null, finish: null };
+    flipAnimations.set(card, animation);
+    card.classList.add('turning');
+    animation.midpoint = setTimeout(() => {
+      changeSide();
+      requestAnimationFrame(() => card.classList.remove('turning'));
+      animation.finish = setTimeout(() => {
+        flipAnimations.delete(card);
+        if (onFinish) onFinish();
+      }, 160);
+    }, 160);
+    return true;
+  }
   function showCard() {
     if (!SS.group) return;
     if (SS.idx >= SS.cards.length) { endStudy(); return; }
     SS.answered = false;
+    cancelFlipAnimation($('flashcard')); cancelFlipAnimation($('flashcardFC'));
     const card = SS.cards[SS.idx], percent = SS.cards.length ? SS.idx / SS.cards.length * 100 : 0;
     $('progressFill').style.width = `${percent}%`; $('studyProgress').setAttribute('aria-valuenow', String(Math.round(percent))); $('progressText').textContent = `${SS.idx + 1}/${SS.cards.length}`;
     const reverse = SS.mode === 'translate-to-word' || SS.mode === 'dictation';
@@ -781,7 +857,8 @@
     if (result === 'correct') feedback.textContent = `✓ ${card.expected}`;
     if (result === 'almost') feedback.textContent = `△ ${t('almostFeedback', { answer: card.expected })}`;
     if (result === 'wrong') feedback.textContent = `✗ ${card.expected}`;
-    if (result !== 'correct') $('flashcard').classList.add('flipped'); scheduleNext(result === 'correct' ? 750 : 1700);
+    if (result !== 'correct') animateCardFlip($('flashcard'), () => $('flashcard').classList.add('flipped'));
+    scheduleNext(result === 'correct' ? 750 : 1700);
   }
   function recordResult(result, given = '') {
     const card = SS.cards[SS.idx]; if (!card) return;
@@ -811,7 +888,12 @@
   }
   function flipFC() {
     if (!SS.group || SS.mode !== 'flashcard' || SS.answered) return;
-    SS.fcFlipped = !SS.fcFlipped; $('flashcardFC').classList.toggle('flipped', SS.fcFlipped); $('flashcardFC').setAttribute('aria-label', SS.fcFlipped ? $('fcBackWord').textContent : $('fcFrontWord').textContent);
+    const card = $('flashcardFC');
+    animateCardFlip(card, () => {
+      SS.fcFlipped = !SS.fcFlipped;
+      card.classList.toggle('flipped', SS.fcFlipped);
+      card.setAttribute('aria-label', SS.fcFlipped ? $('fcBackWord').textContent : $('fcFrontWord').textContent);
+    });
   }
   function rateFC(knew) {
     if (!SS.group || SS.mode !== 'flashcard' || SS.answered) return;
@@ -906,6 +988,7 @@
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); const bulk = $('tab-bulk').getAttribute('aria-selected') === 'true'; switchWordTab(bulk ? 'one-by-one' : 'bulk'); $(bulk ? 'tab-one' : 'tab-bulk').focus(); }
     });
     for (const id of ['gNativeLang', 'gTargetLang']) $(id).addEventListener('change', () => { updateWordRowLabels(); updateGroupTranslationNote(); });
+    $('gInputDirection').addEventListener('change', changeEditorDirection);
     $('wordsEditor').addEventListener('click', event => {
       const button = event.target.closest('[data-row-action]'); if (!button) return;
       if (button.dataset.rowAction === 'remove') button.closest('.word-row').remove(); if (button.dataset.rowAction === 'translate') autoTranslateRow(button);
@@ -913,6 +996,12 @@
     $('bulkInput').addEventListener('input', onBulkInput); $('bulkTranslateBtn').addEventListener('click', translateAllBulk); $('copyShareBtn').addEventListener('click', copyShareCode);
     $('backupBtn').addEventListener('click', backupData); $('restoreInput').addEventListener('change', restoreData); $('deleteAllBtn').addEventListener('click', confirmDeleteAll);
     for (const id of ['darkToggle', 'caseToggle', 'diacriticsToggle', 'fuzzyToggle', 'autoHintToggle', 'nativeLangSel', 'targetLangSel', 'translationProvider']) $(id).addEventListener('change', saveSettings);
+    $('accentColorGrid').addEventListener('click', event => {
+      const button = event.target.closest('[data-accent]');
+      if (!button) return;
+      appData.settings.accentColor = button.dataset.accent;
+      applySettings(); saveData();
+    });
     for (const id of ['onbNativeLang', 'onbTargetLang']) $(id).addEventListener('change', updateOnboardingInfo);
     document.querySelectorAll('[data-onb-provider]').forEach(button => button.addEventListener('click', () => setOnboardingProvider(button.dataset.onbProvider)));
     $('onbSaveBtn').addEventListener('click', completeOnboarding);
@@ -926,7 +1015,7 @@
     $('groupsGrid').addEventListener('click', event => {
       const button = event.target.closest('[data-action]'); if (!button) return;
       const { action, id } = button.dataset;
-      if (action === 'create') openCreateModal(); if (action === 'sample') addSampleGroup(); if (action === 'study') openStudyModal(id); if (action === 'edit') editGroup(id); if (action === 'share') shareGroup(id); if (action === 'delete') deleteGroup(id);
+      if (action === 'create') openCreateModal(); if (action === 'study') openStudyModal(id); if (action === 'edit') editGroup(id); if (action === 'share') shareGroup(id); if (action === 'delete') deleteGroup(id);
     });
     document.querySelectorAll('.mode-card').forEach(button => button.addEventListener('click', () => selectMode(button.dataset.mode)));
     $('startStudyBtn').addEventListener('click', startStudy); $('exitStudyBtn').addEventListener('click', exitStudy); $('resultsBackBtn').addEventListener('click', exitStudy); $('restartStudyBtn').addEventListener('click', restartStudy); $('repeatMistakesBtn').addEventListener('click', repeatMistakes);

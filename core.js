@@ -22,6 +22,7 @@
   ];
   const DEFAULT_SETTINGS = {
     darkMode: true,
+    accentColor: 'green',
     siteLang: 'ru',
     caseSensitive: false,
     diacriticsSensitive: true,
@@ -86,7 +87,7 @@
     };
   }
 
-  function createDefaultData(includeSample = true) {
+  function createDefaultData(includeSample = false) {
     return {
       version: DATA_VERSION,
       groups: includeSample ? [createSampleGroup()] : [],
@@ -250,6 +251,7 @@
     if (languageIds.has(sourceSettings.nativeLang)) settings.nativeLang = sourceSettings.nativeLang;
     if (languageIds.has(sourceSettings.targetLang)) settings.targetLang = sourceSettings.targetLang;
     if (['ru', 'en', 'de', 'fr', 'es'].includes(sourceSettings.siteLang)) settings.siteLang = sourceSettings.siteLang;
+    if (['green', 'blue', 'amber', 'coral'].includes(sourceSettings.accentColor)) settings.accentColor = sourceSettings.accentColor;
     if (['local', 'mymemory', 'manual'].includes(sourceSettings.translationProvider)) settings.translationProvider = sourceSettings.translationProvider;
     if (typeof sourceSettings.myMemoryDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(sourceSettings.myMemoryDate)) settings.myMemoryDate = sourceSettings.myMemoryDate;
     settings.myMemoryUsed = Math.min(5000, integer(sourceSettings.myMemoryUsed));

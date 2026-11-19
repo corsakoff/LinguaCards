@@ -8,7 +8,7 @@
   <title>LinguaCards</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=PT+Mono&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="core.js" defer></script>
   <script src="translation-models.js" defer></script>
@@ -69,6 +69,7 @@
           <section class="glass settings-block">
             <h3 id="appearanceTitle">Внешний вид</h3>
             <div class="settings-row"><div class="sr-info"><div class="sr-title" id="darkThemeTitle">Тёмная тема</div><div class="sr-desc" id="darkThemeDesc">Переключение между тёмной и светлой темой</div></div><label class="toggle"><input type="checkbox" id="darkToggle" aria-label="Тёмная тема" checked><span class="toggle-track"></span><span class="toggle-thumb"></span></label></div>
+            <div class="settings-row"><div class="sr-info"><div class="sr-title" id="accentColorTitle">Акцентный цвет</div><div class="sr-desc" id="accentColorDesc">Используется для основных действий и прогресса</div></div><div class="accent-options" id="accentColorGrid" role="group" aria-labelledby="accentColorTitle"></div></div>
           </section>
           <section class="glass settings-block"><h3 id="siteLangTitle">Язык интерфейса</h3><div class="lang-site-grid" id="siteLangGrid"></div></section>
           <section class="glass settings-block">
@@ -101,7 +102,6 @@
             <div class="settings-row"><div class="sr-info"><div class="sr-title danger-text" id="deleteAllTitle">Удалить все данные</div><div class="sr-desc" id="deleteAllDesc">Безвозвратно удалит группы, статистику и настройки</div></div><button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">Удалить</button></div>
           </section>
           <p class="settings-note" id="translationPrivacy">Локальный перевод не отправляет текст на сервер. MyMemory отправляет текст только при явном использовании этого режима. Группы и статистика хранятся в вашем браузере.</p>
-          <div class="settings-footer"><p id="footerText">LinguaCards v3.0 · Данные хранятся в вашем браузере</p></div>
         </div>
       </div>
     </main>
@@ -182,6 +182,7 @@
           <div><label for="gTargetLang" id="groupTargetLabel">Изучаемый язык</label><select id="gTargetLang"></select></div>
         </div>
         <div class="form-group"><label for="gDesc" id="groupDescLabel">Описание (необязательно)</label><input type="text" id="gDesc" maxlength="2000" placeholder="Краткое описание"></div>
+        <div class="form-group"><label for="gInputDirection" id="inputDirectionLabel">Направление ввода</label><select id="gInputDirection"><option value="target-native">Слово на изучаемом языке → перевод на родном</option><option value="native-target">Слово на родном языке → перевод на изучаемом</option></select></div>
         <div class="form-group">
           <span class="field-label" id="groupWordsLabel">Слова и переводы</span>
           <div id="groupTranslationNote" class="provider-note"></div>

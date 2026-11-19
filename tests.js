@@ -147,6 +147,9 @@
     equal(item.level, 1);
     equal(item.lastResult, 'almost');
   });
+  test('Новая коллекция начинается без примерной группы', () => {
+    equal(C.createDefaultData().groups.length, 0);
+  });
   test('Пример группы проходит валидацию', () => {
     const sample = C.createSampleGroup();
     const normalized = C.normalizeGroup(sample);
@@ -205,6 +208,10 @@
     equal(data.settings.myMemoryUsed, 120);
     const invalid = C.normalizeAppData({ groups: [], settings: { translationProvider: 'unknown' } });
     equal(invalid.settings.translationProvider, 'local');
+  });
+  test('Акцентный цвет проходит валидацию', () => {
+    equal(C.normalizeAppData({ groups: [], settings: { accentColor: 'blue' } }).settings.accentColor, 'blue');
+    equal(C.normalizeAppData({ groups: [], settings: { accentColor: 'unknown' } }).settings.accentColor, 'green');
   });
   test('Восстановление отклоняет файл без массива групп', () => {
     throws(() => C.normalizeAppData({ settings: {} }));
